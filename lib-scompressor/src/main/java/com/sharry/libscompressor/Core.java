@@ -19,7 +19,7 @@ import java.io.IOException;
  * @version 1.0
  * @since 4/11/2019 4:53 PM
  */
-class Core {
+final class Core {
 
     private static final String TAG = Core.class.getSimpleName();
     private static final int INVALIDATE = -1;
@@ -33,8 +33,8 @@ class Core {
         }
         int compressStatus;
         File outputFile = String.class.equals(outputSource.getType()) ?
-                new File((String) outputSource.getSource()) : createOutputFile();
-        Log.e(TAG, "->> output file is: " + outputFile.getAbsolutePath());
+                new File((String) outputSource.getSource()) : createDefaultOutputFile();
+        Log.i(TAG, "->> output file is: " + outputFile.getAbsolutePath());
         if (Bitmap.class.equals(inputSource.getType())) {
             compressStatus = compress(
                     (Bitmap) inputSource.getSource(),
@@ -58,6 +58,7 @@ class Core {
             Log.e(TAG, "Compress failed.");
             return null;
         }
+        Log.i(TAG, "->> Output file length is " + outputFile.length() / 1024 + "kb");
         // do Transform.
         OutputType result;
         if (byte[].class.equals(outputSource.getType())) {
@@ -79,8 +80,12 @@ class Core {
         return result;
     }
 
-    private static File createOutputFile() throws IOException {
-        File tempFile = new File(SCompressor.mUsableDir, System.currentTimeMillis() + ".jpg");
+    private static File createDefaultOutputFile() throws IOException {
+        File tempFile = new File(
+                Preconditions.checkNotNull(SCompressor.mUsableDir, "If U not set output path, " +
+                        "Please invoke SCompressor.initUsableDirectory config an usable directory."),
+                System.currentTimeMillis() + ".jpg"
+        );
         if (tempFile.exists()) {
             tempFile.delete();
         }

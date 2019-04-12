@@ -47,11 +47,6 @@ public class Request<InputType, OutputType> {
     final int destHeight;
 
     /**
-     * Compress dest file size.
-     */
-    final long destLength;
-
-    /**
      * CompressCallback
      */
     final CompressCallback<OutputType> callback;
@@ -62,14 +57,12 @@ public class Request<InputType, OutputType> {
             int quality,
             int destWidth,
             int destHeight,
-            long destLength,
             CompressCallback<OutputType> callback) {
         this.inputSource = inputSource;
         this.outputSource = outputSource;
         this.quality = quality;
         this.destWidth = destWidth;
         this.destHeight = destHeight;
-        this.destLength = destLength;
         this.callback = callback;
     }
 
@@ -89,7 +82,6 @@ public class Request<InputType, OutputType> {
         private int quality = DEFAULT_QUALITY;
         private int desireWidth = INVALIDATE;
         private int desireHeight = INVALIDATE;
-        private long desireLength = INVALIDATE;
 
         Builder() {
         }
@@ -98,14 +90,12 @@ public class Request<InputType, OutputType> {
                         DataSource outputSource,
                         int quality,
                         int desireWidth,
-                        int desireHeight,
-                        long desireLength) {
+                        int desireHeight) {
             this.inputSource = inputSource;
             this.outputSource = outputSource;
             this.quality = quality;
             this.desireWidth = desireWidth;
             this.desireHeight = desireHeight;
-            this.desireLength = desireLength;
         }
 
         /**
@@ -182,16 +172,6 @@ public class Request<InputType, OutputType> {
         }
 
         /**
-         * Set desire output file length when compress completed.
-         *
-         * @param desireLength unit is byte.
-         */
-        public Builder<InputType, OutputType> setDesireFileLength(long desireLength) {
-            this.desireLength = desireLength;
-            return this;
-        }
-
-        /**
          * Convert output type to Bitmap
          */
         public Builder<InputType, Bitmap> asBitmap() {
@@ -212,6 +192,26 @@ public class Request<InputType, OutputType> {
         }
 
         /**
+         * Convert output type to byte array.
+         */
+        public Builder<InputType, byte[]> asByteArray() {
+            this.outputSource = new DataSource<byte[]>() {
+                @NonNull
+                @Override
+                public Class<byte[]> getType() {
+                    return byte[].class;
+                }
+
+                @Nullable
+                @Override
+                public byte[] getSource() {
+                    return null;
+                }
+            };
+            return asOutput(byte[].class);
+        }
+
+        /**
          * Execute async task.
          *
          * @param callback the callback when compress complete.
@@ -225,7 +225,6 @@ public class Request<InputType, OutputType> {
                             quality,
                             desireWidth,
                             desireHeight,
-                            desireLength,
                             callback
                     )
             );
@@ -243,7 +242,6 @@ public class Request<InputType, OutputType> {
                             quality,
                             desireWidth,
                             desireHeight,
-                            desireLength,
                             null
                     )
             );
@@ -282,8 +280,7 @@ public class Request<InputType, OutputType> {
                     outputSource,
                     quality,
                     desireWidth,
-                    desireHeight,
-                    desireLength
+                    desireHeight
             );
         }
 
@@ -299,8 +296,7 @@ public class Request<InputType, OutputType> {
                     outputSource,
                     quality,
                     desireWidth,
-                    desireHeight,
-                    desireLength
+                    desireHeight
             );
         }
     }

@@ -13,7 +13,7 @@ import java.util.Collection;
  * @version 1.0
  * @since 3/29/2019 2:14 PM
  */
-public final class Preconditions {
+final class Preconditions {
 
     private Preconditions() {
         // Utility class.

@@ -28,7 +28,7 @@ public class SCompressor {
      * Get an instance of Request.Builder
      */
     @NonNull
-    public static Request.Builder<Bitmap, byte[]> create() {
+    public static Request.Builder<Bitmap, String> create() {
         return new Request.Builder<>();
     }
 
