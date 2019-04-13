@@ -31,10 +31,10 @@ final class Core {
         if (inputSource.getSource() == null) {
             throw new NullPointerException();
         }
+        Log.i(TAG, request.toString());
         int compressStatus;
         File outputFile = String.class.equals(outputSource.getType()) ?
                 new File((String) outputSource.getSource()) : createDefaultOutputFile();
-        Log.i(TAG, "->> output file is: " + outputFile.getAbsolutePath());
         if (Bitmap.class.equals(inputSource.getType())) {
             compressStatus = compress(
                     (Bitmap) inputSource.getSource(),
@@ -58,6 +58,7 @@ final class Core {
             Log.e(TAG, "Compress failed.");
             return null;
         }
+        Log.i(TAG, "->> output file is: " + outputFile.getAbsolutePath());
         Log.i(TAG, "->> Output file length is " + outputFile.length() / 1024 + "kb");
         // do Transform.
         OutputType result;

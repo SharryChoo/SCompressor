@@ -33,9 +33,9 @@ Java_com_sharry_libscompressor_Core_nativeCompress(JNIEnv *env, jclass type, job
     uchar *data = (uchar *) malloc(static_cast<size_t>(cols * rows * 3));
     uchar *data_header_pointer = data;// 临时保存 data 的首地址, 用于后续释放内存
     uchar r, g, b;
-    int i = 0, j = 0, pixel;
-    for (i = 0; i < rows; ++i) {
-        for (j = 0; j < cols; ++j) {
+    int row = 0, col = 0, pixel;
+    for (row = 0; row < rows; ++row) {
+        for (col = 0; col < cols; ++col) {
             // 获取二维数组的每一个像素信息首地址
             pixel = *((int *) pixels);
             // ...                                              // 忽略 A 通道值

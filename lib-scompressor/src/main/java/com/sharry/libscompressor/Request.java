@@ -66,6 +66,17 @@ public class Request<InputType, OutputType> {
         this.callback = callback;
     }
 
+    @Override
+    public String toString() {
+        return "Request{" +
+                "inputSourceType = " + inputSource.getType().getSimpleName() +
+                ", outputSourceType = " + outputSource.getType().getSimpleName() +
+                ", quality = " + quality +
+                ", destWidth = " + destWidth +
+                ", destHeight = " + destHeight +
+                '}';
+    }
+
     /**
      * The builder associated with Request
      *
