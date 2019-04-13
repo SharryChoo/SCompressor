@@ -18,29 +18,29 @@ class AsyncCall<InputType, OutputType> implements Runnable {
 
     private static final String TAG = AsyncCall.class.getSimpleName();
 
-    private final Request<InputType, OutputType> mOps;
+    private final Request<InputType, OutputType> mRequest;
     private final Handler mHandler = new Handler(Looper.getMainLooper()) {
 
         @Override
         public void handleMessage(Message msg) {
             OutputType outputData = (OutputType) msg.obj;
             if (outputData != null) {
-                mOps.callback.onCompressComplete(outputData);
+                mRequest.callback.onCompressComplete(outputData);
             } else {
                 Log.e(TAG, "Compress failed.");
             }
         }
     };
 
-    AsyncCall(Request<InputType, OutputType> ops) {
-        this.mOps = ops;
+    AsyncCall(Request<InputType, OutputType> request) {
+        this.mRequest = request;
     }
 
     @Override
     public void run() {
         try {
             Message message = Message.obtain();
-            message.obj = Core.execute(mOps);
+            message.obj = Core.execute(mRequest);
             mHandler.sendMessage(message);
         } catch (IOException e) {
             Log.e(TAG, "Image compress failed.", e);

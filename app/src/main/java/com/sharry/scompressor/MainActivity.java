@@ -12,7 +12,6 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.sharry.libscompressor.CompressCallback;
 import com.sharry.libscompressor.SCompressor;
-import com.sharry.picturepicker.camera.manager.CameraConfig;
 import com.sharry.picturepicker.picker.manager.PickerCallback;
 import com.sharry.picturepicker.picker.manager.PickerConfig;
 import com.sharry.picturepicker.picker.manager.PicturePickerManager;
@@ -29,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        SCompressor.initUsableDirectory(getCacheDir());
+        SCompressor.init(this);
         initViews();
     }
 

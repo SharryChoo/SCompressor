@@ -84,7 +84,7 @@ final class Core {
     private static File createDefaultOutputFile() throws IOException {
         File tempFile = new File(
                 Preconditions.checkNotNull(SCompressor.mUsableDir, "If U not set output path, " +
-                        "Please invoke SCompressor.initUsableDirectory config an usable directory."),
+                        "Please invoke SCompressor.init config an usable directory."),
                 System.currentTimeMillis() + ".jpg"
         );
         if (tempFile.exists()) {

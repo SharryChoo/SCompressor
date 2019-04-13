@@ -1,5 +1,6 @@
 package com.sharry.libscompressor;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,8 +21,9 @@ public class SCompressor {
     /**
      * Init usable Dir, helper generate temp file.
      */
-    public static void initUsableDirectory(File cacheDir) {
-        mUsableDir = cacheDir;
+    public static void init(@NonNull Context context) {
+        Preconditions.checkNotNull(context, "Please ensure context non null!");
+        mUsableDir = context.getCacheDir();
     }
 
     /**
@@ -35,11 +37,9 @@ public class SCompressor {
     /**
      * Execute async task.
      */
-    static <InputType, OutputType> void asyncCall(@NonNull Request<InputType, OutputType> ops) {
-        Preconditions.checkNotNull(ops);
-        Preconditions.checkNotNull(ops.inputSource);
-        Preconditions.checkNotNull(ops.callback);
-        CompressDispatcher.asyncDispatcher(ops);
+    static <InputType, OutputType> void asyncCall(Request<InputType, OutputType> request) {
+        Preconditions.checkNotNull(request.callback, "Please ensure Request.callback non null!");
+        CompressDispatcher.asyncDispatcher(request);
     }
 
     /**
@@ -48,9 +48,8 @@ public class SCompressor {
      * @return an instance of target output data.
      */
     @Nullable
-    static <InputType, OutputType> OutputType syncCall(@NonNull Request<InputType, OutputType> ops) {
-        Preconditions.checkNotNull(ops);
-        Preconditions.checkNotNull(ops.inputSource);
-        return CompressDispatcher.syncDispatcher(ops);
+    static <InputType, OutputType> OutputType syncCall(Request<InputType, OutputType> request) {
+        Preconditions.checkNotNull(request.inputSource, "Please ensure Request.inputSource non null!");
+        return CompressDispatcher.syncDispatcher(request);
     }
 }
