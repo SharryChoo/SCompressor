@@ -26,7 +26,7 @@ set_target_properties(
 # 添加要打包的资源
 add_library(
         # 打包后的库名称
-        lib-compressor
+        libscompressor
         # 库类型
         SHARED
         # 打包的文件
@@ -51,7 +51,7 @@ find_library(
 # 将打包的 so 链接到项目中
 target_link_libraries(
         # Specifies the target library.
-        lib-compressor
+        libscompressor
         # 外部链接库
         jnigraphics
         libjpeg

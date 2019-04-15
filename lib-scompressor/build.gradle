@@ -14,7 +14,7 @@ android {
                 cppFlags ""
             }
             ndk {
-                abiFilters "armeabi" // 只生成 armeabi 的 CPU 架构的 .so
+                abiFilters "armeabi", "armeabi-v7a"
             }
         }
     }
@@ -25,7 +25,6 @@ android {
     }
     sourceSets {
         main {
-            jniLibs.srcDirs = ['libs']
             jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
