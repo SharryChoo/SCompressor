@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 /**
  * The description of data.
  *
- * @author Sharry <a href="xiaoyu.zhu@1hai.cn">Contact me.</a>
+ * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
  * @version 1.0
  * @since 4/2/2019 11:04 AM
  */

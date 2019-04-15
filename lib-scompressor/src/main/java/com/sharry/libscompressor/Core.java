@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * The core algorithm associated with picture compress.
  *
- * @author Sharry <a href="xiaoyu.zhu@1hai.cn">Contact me.</a>
+ * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
  * @version 1.0
  * @since 4/11/2019 4:53 PM
  */
