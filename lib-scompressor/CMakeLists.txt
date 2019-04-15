@@ -20,7 +20,7 @@ set_target_properties(
         libjpeg
         PROPERTIES
         IMPORTED_LOCATION
-        ${source_dir}/jniLibs/armeabi/libjpeg.so
+        ${source_dir}/jniLibs/armeabi-v7a/libjpeg.so
 )
 
 # 添加要打包的资源

@@ -14,7 +14,7 @@ android {
                 cppFlags ""
             }
             ndk {
-                abiFilters "armeabi"
+                abiFilters "armeabi-v7a"
             }
         }
     }
