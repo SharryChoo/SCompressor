@@ -31,6 +31,10 @@ Java_com_sharry_libscompressor_Core_nativeCompress(JNIEnv *env, jclass type, job
     // 锁定画布
     uchar *pixels = NULL;
     AndroidBitmap_lockPixels(env, bitmap, (void **) &pixels);
+    if (pixels == NULL) {
+        LOGE("Fetch Bitmap data failed.");
+        return false;
+    }
     // 创建存储数组
     uchar *data = (uchar *) malloc(static_cast<size_t>(cols * rows * 3));
     uchar *data_header_pointer = data;// 临时保存 data 的首地址, 用于后续释放内存
@@ -38,24 +42,25 @@ Java_com_sharry_libscompressor_Core_nativeCompress(JNIEnv *env, jclass type, job
     int row = 0, col = 0, pixel;
     for (row = 0; row < rows; ++row) {
         for (col = 0; col < cols; ++col) {
-            // 获取二维数组的每一个像素信息首地址
+            // 2.1 获取像素值
             pixel = *((int *) pixels);
             // ...                                              // 忽略 A 通道值
             r = static_cast<uchar>((pixel & 0x00FF0000) >> 16); // 获取 R 通道值
             g = static_cast<uchar>((pixel & 0x0000FF00) >> 8);  // 获取 G 通道值
             b = static_cast<uchar>((pixel & 0x000000FF));       // 获取 B 通道值
-            *data = b;
-            *(data + 1) = g;
-            *(data + 2) = r;
-            data += 3;
             pixels += 4;
+            // 2.2 为 Data 填充数据
+            *(data++) = b;
+            *(data++) = g;
+            *(data++) = r;
         }
     }
     // 解锁画布
     AndroidBitmap_unlockPixels(env, bitmap);
+
     // 3. 使用 libjpeg 进行图片质量压缩
-    LOGI("Lib jpeg turbo do compress");
-    char *output_filename = (char *) (env)->GetStringUTFChars(destPath_, 0);
+    LOGI("libjpeg-turbo do compress");
+    char *output_filename = (char *) (env)->GetStringUTFChars(destPath_, NULL);
     int result = LibJpegTurboUtils::write_JPEG_file(data_header_pointer, rows, cols,
                                                     output_filename,
                                                     quality);
