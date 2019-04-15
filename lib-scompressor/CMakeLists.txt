@@ -20,13 +20,13 @@ set_target_properties(
         libjpeg
         PROPERTIES
         IMPORTED_LOCATION
-        ${source_dir}/jniLibs/armeabi/libjpeg.so
+        ${source_dir}/jniLibs/armeabi-v7a/libjpeg.so
 )
 
 # 添加要打包的资源
 add_library(
         # 打包后的库名称
-        libscompressor
+        libcompressor
         # 库类型
         SHARED
         # 打包的文件
@@ -51,7 +51,7 @@ find_library(
 # 将打包的 so 链接到项目中
 target_link_libraries(
         # Specifies the target library.
-        libscompressor
+        libcompressor
         # 外部链接库
         jnigraphics
         libjpeg
