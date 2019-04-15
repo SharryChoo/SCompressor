@@ -85,7 +85,7 @@ public class Request<InputType, OutputType> {
      */
     public static class Builder<InputType, OutputType> {
 
-        private static final int DEFAULT_QUALITY = 90;
+        private static final int DEFAULT_QUALITY = 75;
         private static final int INVALIDATE = -1;
 
         private DataSource inputSource;
@@ -166,7 +166,7 @@ public class Request<InputType, OutputType> {
          * @param quality range [0, 100]
          */
         public Builder<InputType, OutputType> setQuality(@IntRange(from = 0, to = 100) int quality) {
-            this.quality = quality;
+            this.quality = Preconditions.checkRange(quality, 0, 100);
             return this;
         }
 

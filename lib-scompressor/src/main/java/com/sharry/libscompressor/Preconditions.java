@@ -25,6 +25,13 @@ final class Preconditions {
         }
     }
 
+    static int checkRange(int args, int start, int dest) {
+        if (args < start || args > dest) {
+            throw new IllegalArgumentException("args must range of [" + start + ", " + dest + "]");
+        }
+        return args;
+    }
+
     @NonNull
     static <T> T checkNotNull(@Nullable T arg) {
         return checkNotNull(arg, "Argument must not be null");
@@ -53,5 +60,4 @@ final class Preconditions {
         }
         return collection;
     }
-
 }

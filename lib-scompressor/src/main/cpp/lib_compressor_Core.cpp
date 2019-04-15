@@ -5,6 +5,7 @@
 #include "libjpegturbo_utils.h"
 
 #define TAG "Core_native"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
 typedef unsigned char uchar;
@@ -19,13 +20,14 @@ Java_com_sharry_libscompressor_Core_nativeCompress(JNIEnv *env, jclass type, job
     int cols = info.width;
     int rows = info.height;
     int format = info.format;
-    LOGE("->> Bitmap width is %d, height is %d", cols, rows);
+    LOGI("Bitmap width is %d, height is %d", cols, rows);
     // 若不为 ARGB8888, 则不给予压缩
     if (format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        LOGE("Unsupported Bitmap channels, Please ensure channels is ARGB_8888.");
         return false;
     }
     // 2. 解析数据
-    LOGE("->> Parse bitmap pixels");
+    LOGI("Parse bitmap pixels");
     // 锁定画布
     uchar *pixels = NULL;
     AndroidBitmap_lockPixels(env, bitmap, (void **) &pixels);
@@ -52,12 +54,13 @@ Java_com_sharry_libscompressor_Core_nativeCompress(JNIEnv *env, jclass type, job
     // 解锁画布
     AndroidBitmap_unlockPixels(env, bitmap);
     // 3. 使用 libjpeg 进行图片质量压缩
-    LOGE("->> Lib jpeg turbo do compress");
+    LOGI("Lib jpeg turbo do compress");
     char *output_filename = (char *) (env)->GetStringUTFChars(destPath_, 0);
-    int result = LibJpegTurboUtils::write_JPEG_file(data_header_pointer, rows, cols, output_filename,
-                                               quality);
+    int result = LibJpegTurboUtils::write_JPEG_file(data_header_pointer, rows, cols,
+                                                    output_filename,
+                                                    quality);
     // 4. 释放资源
-    LOGE("->> Release memory");
+    LOGI("Release memory");
     free((void *) data_header_pointer);
     env->ReleaseStringUTFChars(destPath_, output_filename);
     return result;

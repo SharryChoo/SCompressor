@@ -58,8 +58,8 @@ final class Core {
             Log.e(TAG, "Compress failed.");
             return null;
         }
-        Log.i(TAG, "->> output file is: " + outputFile.getAbsolutePath());
-        Log.i(TAG, "->> Output file length is " + outputFile.length() / 1024 + "kb");
+        Log.i(TAG, "Output file is: " + outputFile.getAbsolutePath());
+        Log.i(TAG, "Output file length is " + outputFile.length() / 1024 + "kb");
         // do Transform.
         OutputType result;
         if (byte[].class.equals(outputSource.getType())) {
