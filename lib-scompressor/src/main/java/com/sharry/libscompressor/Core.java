@@ -258,7 +258,7 @@ final class Core {
     }
 
     static {
-        System.loadLibrary("libcompressor");
+        System.loadLibrary("lib-scompressor");
     }
 
     private static native int nativeCompress(Bitmap bitmap, int quality, String destPath);
