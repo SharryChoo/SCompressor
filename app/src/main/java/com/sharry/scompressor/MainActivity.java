@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         // 进行图片压缩
         SCompressor.create()
                 .setSrcPath(url)
+                .setDesireSize(600, 800)
                 .setQuality(70)
                 .asBitmap()
                 .commit(new CompressCallback<Bitmap>() {
