@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
+import android.os.Build;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
@@ -68,7 +69,8 @@ final class Core {
         } else if (Bitmap.class.equals(outputSource.getType())) {
             // Convert 2 bitmap
             BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            options.inPreferredConfig = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+                    Bitmap.Config.HARDWARE : Bitmap.Config.RGB_565;
             result = (OutputType) BitmapFactory.decodeFile(outputFile.getAbsolutePath(), options);
         } else if (String.class.equals(outputSource.getType())) {
             // Return file path.
