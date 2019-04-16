@@ -23,6 +23,7 @@ import java.io.IOException;
 final class Core {
 
     private static final String TAG = Core.class.getSimpleName();
+    private static final String SUFFIX_JPEG = ".jpg";
     private static final int INVALIDATE = -1;
 
     static <InputType, OutputType> OutputType execute(Request<InputType, OutputType> request) throws IOException {
@@ -87,7 +88,7 @@ final class Core {
         File tempFile = new File(
                 Preconditions.checkNotNull(SCompressor.mUsableDir, "If U not set output path, " +
                         "Please invoke SCompressor.init config an usable directory."),
-                System.currentTimeMillis() + ".jpg"
+                System.currentTimeMillis() + SUFFIX_JPEG
         );
         if (tempFile.exists()) {
             tempFile.delete();
