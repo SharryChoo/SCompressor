@@ -3,9 +3,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.4.1)
 
 # 链接头文件
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/main/jniLibs/include)
+
 # 指定外部链接库目录
 LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/main/jniLibs/armeabi-v7a)
-
 
 # 对文件集合取变量
 FILE(GLOB SRC_LIST "${PROJECT_SOURCE_DIR}/src/main/cpp/*.cpp")
