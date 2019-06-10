@@ -12,10 +12,10 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.sharry.libscompressor.CompressCallback;
 import com.sharry.libscompressor.SCompressor;
-import com.sharry.picturepicker.picker.manager.PickerCallback;
-import com.sharry.picturepicker.picker.manager.PickerConfig;
-import com.sharry.picturepicker.picker.manager.PicturePickerManager;
-import com.sharry.picturepicker.support.loader.IPictureLoader;
+import com.sharry.picturepicker.facade.IPictureLoaderEngine;
+import com.sharry.picturepicker.facade.PickerCallback;
+import com.sharry.picturepicker.facade.PickerConfig;
+import com.sharry.picturepicker.facade.PicturePickerManager;
 
 import java.util.ArrayList;
 
@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
                                         .setThreshold(1)
                                         .build()
                         )
-                        .setPictureLoader(new IPictureLoader() {
+                        .setPictureLoader(new IPictureLoaderEngine() {
                             @Override
                             public void load(Context context, String uri, ImageView imageView) {
                                 Glide.with(context).load(uri).into(imageView);
@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onPickedComplete(ArrayList<String> userPickedSet) {
                                 doCompress(userPickedSet.get(0));
-
                             }
                         });
             }
