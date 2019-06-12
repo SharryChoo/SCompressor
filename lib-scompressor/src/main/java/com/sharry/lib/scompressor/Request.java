@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import static android.support.annotation.Dimension.PX;
+import static com.sharry.lib.scompressor.SCompressor.TAG;
 
 
 /**
@@ -37,6 +38,11 @@ public class Request<InputType, OutputType> {
     final int quality;
 
     /**
+     * Control auto down sample or not.
+     */
+    final boolean isSupportDownSample;
+
+    /**
      * Compress out desire width.
      */
     @Dimension(unit = PX)
@@ -57,12 +63,14 @@ public class Request<InputType, OutputType> {
             DataSource<InputType> inputSource,
             DataSource<OutputType> outputSource,
             int quality,
+            boolean isSupportDownSample,
             int destWidth,
             int destHeight,
             CompressCallback<OutputType> callback) {
         this.inputSource = inputSource;
         this.outputSource = outputSource;
         this.quality = quality;
+        this.isSupportDownSample = isSupportDownSample;
         this.destWidth = destWidth;
         this.destHeight = destHeight;
         this.callback = callback;
@@ -70,12 +78,14 @@ public class Request<InputType, OutputType> {
 
     @Override
     public String toString() {
-        return "Request{" +
-                "inputSourceType = " + inputSource.getType().getSimpleName() +
-                ", outputSourceType = " + outputSource.getType().getSimpleName() +
-                ", quality = " + quality +
-                ", destWidth = " + destWidth +
-                ", destHeight = " + destHeight +
+        return "SCompressor Request{" +
+                "inputSource=" + inputSource +
+                ", outputSource=" + outputSource +
+                ", quality=" + quality +
+                ", isAutoDownSample=" + isSupportDownSample +
+                ", destWidth=" + destWidth +
+                ", destHeight=" + destHeight +
+                ", callback=" + callback +
                 '}';
     }
 
@@ -93,6 +103,7 @@ public class Request<InputType, OutputType> {
         private DataSource inputSource;
         private DataSource outputSource;
         private int quality = DEFAULT_QUALITY;
+        private boolean isAutoDownSample = true;
         private int desireWidth = INVALIDATE;
         private int desireHeight = INVALIDATE;
 
@@ -102,11 +113,13 @@ public class Request<InputType, OutputType> {
         private Builder(DataSource inputSource,
                         DataSource outputSource,
                         int quality,
+                        boolean isAutoDownSample,
                         int desireWidth,
                         int desireHeight) {
             this.inputSource = inputSource;
             this.outputSource = outputSource;
             this.quality = quality;
+            this.isAutoDownSample = isAutoDownSample;
             this.desireWidth = desireWidth;
             this.desireHeight = desireHeight;
         }
@@ -163,16 +176,14 @@ public class Request<InputType, OutputType> {
         public <NewInputType> Builder<NewInputType, OutputType> setInputSource(
                 @NonNull DataSource<NewInputType> inputSource) {
             this.inputSource = inputSource;
-            return asInput(inputSource.getType());
-        }
-
-        /**
-         * Set desire output image width and height when compress completed.
-         */
-        public Builder<InputType, OutputType> setDesireSize(int desireWidth, int desireHeight) {
-            this.desireWidth = desireWidth;
-            this.desireHeight = desireHeight;
-            return this;
+            return new Builder<>(
+                    inputSource,
+                    outputSource,
+                    quality,
+                    isAutoDownSample,
+                    desireWidth,
+                    desireHeight
+            );
         }
 
         /**
@@ -182,6 +193,23 @@ public class Request<InputType, OutputType> {
          */
         public Builder<InputType, OutputType> setQuality(@IntRange(from = 0, to = 100) int quality) {
             this.quality = Preconditions.checkRange(quality, 0, 100);
+            return this;
+        }
+
+        /**
+         * Set up support auto down sample or not.
+         */
+        public Builder<InputType, OutputType> setAutoDownSample(boolean autoDownSample) {
+            isAutoDownSample = autoDownSample;
+            return this;
+        }
+
+        /**
+         * Set desire output image width and height when compress completed.
+         */
+        public Builder<InputType, OutputType> setDesireSize(int desireWidth, int desireHeight) {
+            this.desireWidth = desireWidth;
+            this.desireHeight = desireHeight;
             return this;
         }
 
@@ -257,7 +285,35 @@ public class Request<InputType, OutputType> {
                 @NonNull DataSource<NewOutputType> outputDataSource) {
             Preconditions.checkNotNull(outputDataSource);
             this.outputSource = outputDataSource;
-            return asOutput(outputDataSource.getType());
+            return new Builder<>(
+                    inputSource,
+                    outputSource,
+                    quality,
+                    isAutoDownSample,
+                    desireWidth,
+                    desireHeight
+            );
+        }
+
+        /**
+         * Execute async task.
+         *
+         * @param lambdaCallback the callback when compress complete.
+         */
+        public void asyncCall(@NonNull final CompressCallbackLambda<OutputType> lambdaCallback) {
+            Preconditions.checkNotNull(lambdaCallback);
+            asyncCall(new CompressCallback<OutputType>() {
+                @Override
+                public void onCompressSuccess(@NonNull OutputType compressedData) {
+                    lambdaCallback.onCompressComplete(true, compressedData);
+                }
+
+                @Override
+                public void onCompressFailed(@NonNull Throwable e) {
+                    Log.e(TAG, e.getMessage(), e);
+                    lambdaCallback.onCompressComplete(false, null);
+                }
+            });
         }
 
         /**
@@ -272,6 +328,7 @@ public class Request<InputType, OutputType> {
                             inputSource,
                             outputSource,
                             quality,
+                            isAutoDownSample,
                             desireWidth,
                             desireHeight,
                             callback
@@ -289,6 +346,7 @@ public class Request<InputType, OutputType> {
                             inputSource,
                             outputSource,
                             quality,
+                            isAutoDownSample,
                             desireWidth,
                             desireHeight,
                             null
@@ -296,37 +354,6 @@ public class Request<InputType, OutputType> {
             );
         }
 
-        /**
-         * Convert Builder to target input type.
-         *
-         * @param inputClass target input type.
-         */
-        private <NewInputType> Builder<NewInputType, OutputType> asInput(Class<NewInputType> inputClass) {
-            Log.v(Builder.class.getSimpleName(), "Builder input type convert to " + inputClass);
-            return new Builder<>(
-                    inputSource,
-                    outputSource,
-                    quality,
-                    desireWidth,
-                    desireHeight
-            );
-        }
-
-        /**
-         * Convert Builder to target output type.
-         *
-         * @param outputClass target output type.
-         */
-        private <NewOutputType> Builder<InputType, NewOutputType> asOutput(Class<NewOutputType> outputClass) {
-            Log.v(Builder.class.getSimpleName(), "Builder output type convert to " + outputClass);
-            return new Builder<>(
-                    inputSource,
-                    outputSource,
-                    quality,
-                    desireWidth,
-                    desireHeight
-            );
-        }
     }
 
 }

@@ -3,9 +3,6 @@ package com.sharry.lib.scompressor;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
-
-import java.io.IOException;
 
 /**
  * Compress runnable.
@@ -23,12 +20,11 @@ class AsyncCall<InputType, OutputType> implements Runnable {
 
         @Override
         public void handleMessage(Message msg) {
-            OutputType outputData = (OutputType) msg.obj;
-            if (outputData != null) {
-                mRequest.callback.onCompressComplete(outputData);
-            } else {
-                Log.e(TAG, "Compress failed.");
+            if (msg.obj instanceof Throwable) {
+                mRequest.callback.onCompressFailed((Throwable) msg.obj);
+                return;
             }
+            mRequest.callback.onCompressSuccess((OutputType) msg.obj);
         }
     };
 
@@ -38,13 +34,13 @@ class AsyncCall<InputType, OutputType> implements Runnable {
 
     @Override
     public void run() {
+        Message msg = Message.obtain();
         try {
-            Message message = Message.obtain();
-            message.obj = Core.execute(mRequest);
-            mHandler.sendMessage(message);
-        } catch (IOException e) {
-            Log.e(TAG, "Image compress failed.", e);
+            msg.obj = Core.execute(mRequest);
+        } catch (Throwable e) {
+            msg.obj = e;
         }
+        mHandler.sendMessage(msg);
     }
 
 }

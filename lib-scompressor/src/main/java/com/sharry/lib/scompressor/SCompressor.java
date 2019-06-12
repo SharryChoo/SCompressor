@@ -18,6 +18,7 @@ import java.util.List;
  */
 public class SCompressor {
 
+    static final String TAG = SCompressor.class.getSimpleName();
     static final List<InputAdapter> INPUT_ADAPTERS = new ArrayList<>();
     static final List<OutputAdapter> OUTPUT_ADAPTERS = new ArrayList<>();
 

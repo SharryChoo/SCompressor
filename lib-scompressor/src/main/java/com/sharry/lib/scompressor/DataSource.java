@@ -10,7 +10,7 @@ import android.support.annotation.Nullable;
  * @version 1.0
  * @since 4/2/2019 11:04 AM
  */
-interface DataSource<SourceType> {
+public interface DataSource<SourceType> {
 
     /**
      * Get generic SourceType class.

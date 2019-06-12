@@ -9,6 +9,8 @@ import android.util.Log;
 import java.io.File;
 import java.io.IOException;
 
+import static com.sharry.lib.scompressor.SCompressor.TAG;
+
 /**
  * The core algorithm associated with picture compress.
  *
@@ -18,12 +20,11 @@ import java.io.IOException;
  */
 final class Core {
 
-    private static final String TAG = Core.class.getSimpleName();
     private static final String SUFFIX_JPEG = ".jpg";
     private static final String UNSUSPECTED_FILE_PREFIX = "SCompressor_";
     private static final int INVALIDATE = -1;
 
-    static <InputType, OutputType> OutputType execute(Request<InputType, OutputType> request) throws IOException {
+    static <InputType, OutputType> OutputType execute(Request<InputType, OutputType> request) throws Throwable {
         // compress
         DataSource<InputType> inputSource = request.inputSource;
         DataSource<OutputType> outputSource = request.outputSource;
@@ -32,22 +33,21 @@ final class Core {
         }
         Log.i(TAG, request.toString());
         // 1. Adapter input data 2 input path.
-        String inputFilePath = null;
-        try {
-            inputFilePath = findInputAdapter(inputSource.getType())
-                    .adapt(request, inputSource.getSource());
-        } catch (Throwable throwable) {
-            Log.e(TAG, throwable.getMessage());
-            return null;
-        }
+        String inputFilePath = findInputAdapter(inputSource.getType())
+                .adapt(request, inputSource.getSource());
         // 2. Do compress.
         // 2.1 Nearest Neighbour down sampling compress
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = (request.destWidth == Request.INVALIDATE
-                || request.destHeight == Request.INVALIDATE) ?
-                Core.calculateSampleSize(inputFilePath) :
-                Core.calculateSampleSize(inputFilePath, request.destWidth, request.destHeight);
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        if (request.destWidth == Request.INVALIDATE || request.destHeight == Request.INVALIDATE) {
+            if (request.isSupportDownSample) {
+                options.inSampleSize = Core.calculateSampleSize(inputFilePath);
+            } else {
+                Log.i(TAG, "Cannot support auto down sample");
+            }
+        } else {
+            Core.calculateSampleSize(inputFilePath, request.destWidth, request.destHeight);
+        }
         Bitmap downSampleBitmap = BitmapFactory.decodeFile(inputFilePath, options);
         // 2.2 Try to rotate Bitmap
         downSampleBitmap = Core.rotateBitmap(downSampleBitmap,
@@ -64,7 +64,7 @@ final class Core {
         // Verify compress result.
         if (compressStatus == 0) {
             Log.e(TAG, "Compress failed.");
-            return null;
+            throw new RuntimeException("Native quality compress failed.");
         }
         // 3. Adapter 2 target type.
         Log.i(TAG, "Output file is: " + outputFile.getAbsolutePath());
@@ -148,27 +148,22 @@ final class Core {
         return powerOfTwoSampleSize;
     }
 
-    private static int readImageRotateAngle(String imagePath) {
+    private static int readImageRotateAngle(String imagePath) throws IOException {
         int degree = 0;
-        ExifInterface exifInterface;
-        try {
-            exifInterface = new ExifInterface(imagePath);
-            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-            switch (orientation) {
-                case ExifInterface.ORIENTATION_ROTATE_90:
-                    degree = 90;
-                    break;
-                case ExifInterface.ORIENTATION_ROTATE_180:
-                    degree = 180;
-                    break;
-                case ExifInterface.ORIENTATION_ROTATE_270:
-                    degree = 270;
-                    break;
-                default:
-                    break;
-            }
-        } catch (IOException e) {
-            Log.e(TAG, "readImageRotateAngle failed.", e);
+        ExifInterface exifInterface = new ExifInterface(imagePath);
+        int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                degree = 90;
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                degree = 180;
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                degree = 270;
+                break;
+            default:
+                break;
         }
         return degree;
     }

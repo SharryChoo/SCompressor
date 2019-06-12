@@ -3,7 +3,6 @@ package com.sharry.lib.scompressor;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
@@ -14,6 +13,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static com.sharry.lib.scompressor.SCompressor.TAG;
+
 /**
  * 图片压缩分发器
  *
@@ -22,8 +23,6 @@ import java.util.concurrent.TimeUnit;
  * @since 2018/8/27 22:14
  */
 class CompressDispatcher extends ThreadPoolExecutor {
-
-    private static final String TAG = CompressDispatcher.class.getSimpleName();
 
     /**
      * Sync dispatch a task.
@@ -34,7 +33,7 @@ class CompressDispatcher extends ThreadPoolExecutor {
         OutputType result = null;
         try {
             result = Core.execute(request);
-        } catch (IOException e) {
+        } catch (Throwable e) {
             Log.e(TAG, "Compress failed.", e);
         }
         return result;

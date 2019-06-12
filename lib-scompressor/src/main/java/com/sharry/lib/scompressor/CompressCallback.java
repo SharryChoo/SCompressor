@@ -16,6 +16,10 @@ public interface CompressCallback<Output> {
      *
      * @param compressedData result is true it will nonnull, false is null.
      */
-    void onCompressComplete(@NonNull Output compressedData);
+    void onCompressSuccess(@NonNull Output compressedData);
 
+    /**
+     * Called when compress failed
+     */
+    void onCompressFailed(@NonNull Throwable e);
 }
