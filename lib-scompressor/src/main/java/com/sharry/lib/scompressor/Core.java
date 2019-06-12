@@ -1,16 +1,12 @@
-package com.sharry.libscompressor;
+package com.sharry.lib.scompressor;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
-import android.os.Build;
 import android.util.Log;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
@@ -24,6 +20,7 @@ final class Core {
 
     private static final String TAG = Core.class.getSimpleName();
     private static final String SUFFIX_JPEG = ".jpg";
+    private static final String UNSUSPECTED_FILE_PREFIX = "SCompressor_";
     private static final int INVALIDATE = -1;
 
     static <InputType, OutputType> OutputType execute(Request<InputType, OutputType> request) throws IOException {
@@ -34,122 +31,58 @@ final class Core {
             throw new NullPointerException();
         }
         Log.i(TAG, request.toString());
-        int compressStatus;
-        File outputFile = String.class.equals(outputSource.getType()) ?
-                new File((String) outputSource.getSource()) : createDefaultOutputFile();
-        if (Bitmap.class.equals(inputSource.getType())) {
-            compressStatus = compress(
-                    (Bitmap) inputSource.getSource(),
-                    request.quality,
-                    request.destWidth,
-                    request.destHeight,
-                    outputFile.getAbsolutePath()
-            );
-        } else if (String.class.equals(request.inputSource.getType())) {
-            compressStatus = compress(
-                    (String) inputSource.getSource(),
-                    request.quality,
-                    request.destWidth,
-                    request.destHeight,
-                    outputFile.getAbsolutePath()
-            );
-        } else {
-            throw new UnsupportedOperationException("Cannot compress input source like " + request.inputSource);
+        // 1. Adapter input data 2 input path.
+        String inputFilePath = null;
+        try {
+            inputFilePath = findInputAdapter(inputSource.getType())
+                    .adapt(request, inputSource.getSource());
+        } catch (Throwable throwable) {
+            Log.e(TAG, throwable.getMessage());
+            return null;
         }
+        // 2. Do compress.
+        // 2.1 Nearest Neighbour down sampling compress
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = (request.destWidth == Request.INVALIDATE
+                || request.destHeight == Request.INVALIDATE) ?
+                Core.calculateSampleSize(inputFilePath) :
+                Core.calculateSampleSize(inputFilePath, request.destWidth, request.destHeight);
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        Bitmap downSampleBitmap = BitmapFactory.decodeFile(inputFilePath, options);
+        // 2.2 Try to rotate Bitmap
+        downSampleBitmap = Core.rotateBitmap(downSampleBitmap,
+                Core.readImageRotateAngle(inputFilePath));
+        // If the file is unsuspected file, then delete it.
+        if (inputFilePath.startsWith(UNSUSPECTED_FILE_PREFIX)) {
+            File tempFile = new File(inputFilePath);
+            tempFile.delete();
+        }
+        // 2.3 Quality compress
+        File outputFile = String.class.equals(outputSource.getType()) ?
+                new File((String) outputSource.getSource()) : createUnsuspectedFile();
+        int compressStatus = nativeCompress(downSampleBitmap, request.quality, outputFile.getAbsolutePath());
+        // Verify compress result.
         if (compressStatus == 0) {
             Log.e(TAG, "Compress failed.");
             return null;
         }
+        // 3. Adapter 2 target type.
         Log.i(TAG, "Output file is: " + outputFile.getAbsolutePath());
         Log.i(TAG, "Output file length is " + outputFile.length() / 1024 + "kb");
-        // do Transform.
-        OutputType result;
-        if (byte[].class.equals(outputSource.getType())) {
-            // Convert 2 byte array.
-            result = (OutputType) getBytes(outputFile);
-        } else if (Bitmap.class.equals(outputSource.getType())) {
-            // Convert 2 bitmap
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
-                    Bitmap.Config.HARDWARE : Bitmap.Config.RGB_565;
-            result = (OutputType) BitmapFactory.decodeFile(outputFile.getAbsolutePath(), options);
-        } else if (String.class.equals(outputSource.getType())) {
-            // Return file path.
-            return (OutputType) outputFile.getAbsolutePath();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-        // If output type not File path, do delete at here.
-        outputFile.delete();
-        return result;
+        return findOutputAdapter(outputSource.getType()).adapt(outputFile);
     }
 
-    private static File createDefaultOutputFile() throws IOException {
+    static File createUnsuspectedFile() throws IOException {
         File tempFile = new File(
-                Preconditions.checkNotNull(SCompressor.mUsableDir, "If U not set output path, " +
+                Preconditions.checkNotNull(SCompressor.usableDir, "If U not set output path, " +
                         "Please invoke SCompressor.init config an usable directory."),
-                System.currentTimeMillis() + SUFFIX_JPEG
+                UNSUSPECTED_FILE_PREFIX + System.currentTimeMillis() + SUFFIX_JPEG
         );
         if (tempFile.exists()) {
             tempFile.delete();
         }
         tempFile.createNewFile();
         return tempFile;
-    }
-
-    private static byte[] getBytes(File target) {
-        byte[] buffer = null;
-        try {
-            FileInputStream fis = new FileInputStream(target);
-            ByteArrayOutputStream bos = new ByteArrayOutputStream(1000);
-            byte[] b = new byte[1024];
-            int n;
-            while ((n = fis.read(b)) != -1) {
-                bos.write(b, 0, n);
-            }
-            fis.close();
-            bos.close();
-            buffer = bos.toByteArray();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return buffer;
-    }
-
-    private static int compress(
-            String inputPath,
-            int quality,
-            int destWidth,
-            int destHeight,
-            String outputPath) {
-        // 1. Nearest Neighbour Resampling Compress
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = (destWidth == INVALIDATE || destHeight == INVALIDATE) ? calculateSampleSize(inputPath)
-                : calculateSampleSize(inputPath, destWidth, destHeight);
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        Bitmap bitmap = BitmapFactory.decodeFile(inputPath, options);
-        // 2. Try to rotate Bitmap
-        bitmap = rotateBitmap(bitmap, readImageRotateAngle(inputPath));
-        // 3. Quality Compress
-        return nativeCompress(bitmap, quality, outputPath);
-    }
-
-    private static int compress(
-            Bitmap inputBitmap,
-            int quality,
-            int destWidth,
-            int destHeight,
-            String outputPath) {
-        // 1. Bilinear Resampling
-        int sampleSize = (destWidth == INVALIDATE || destHeight == INVALIDATE) ?
-                calculateSampleSize(inputBitmap.getWidth(), inputBitmap.getHeight()) :
-                calculateSampleSize(inputBitmap.getWidth(), inputBitmap.getHeight(), destWidth, destHeight);
-        Bitmap compress = Bitmap.createScaledBitmap(inputBitmap, inputBitmap.getWidth() / sampleSize,
-                inputBitmap.getHeight() / sampleSize, true);
-        // 2. Quality Compress
-        return nativeCompress(compress, quality, outputPath);
     }
 
     private static int calculateSampleSize(String filePath) {
@@ -259,6 +192,36 @@ final class Core {
         options.inJustDecodeBounds = false;
         return new int[]{options.outWidth, options.outHeight};
     }
+
+    private static <Input> InputAdapter<Input> findInputAdapter(Class<Input> inputType) {
+        InputAdapter<Input> adapter = null;
+        for (InputAdapter inputAdapter : SCompressor.INPUT_ADAPTERS) {
+            if (inputAdapter.isAdapter(inputType)) {
+                adapter = inputAdapter;
+            }
+        }
+        if (adapter == null) {
+            throw new UnsupportedOperationException("Cannot find an adapter that can convert "
+                    + inputType.getName() + " to pre quality compressed bitmap");
+        }
+        return adapter;
+    }
+
+    private static <Target> OutputAdapter<Target> findOutputAdapter(Class<Target> targetType) {
+        OutputAdapter<Target> adapter = null;
+        for (OutputAdapter outputAdapter : SCompressor.OUTPUT_ADAPTERS) {
+            if (outputAdapter.isAdapter(targetType)) {
+                adapter = outputAdapter;
+            }
+        }
+        if (adapter == null) {
+            throw new UnsupportedOperationException("Cannot find an adapter that can convert " +
+                    "compressed file path to" + targetType.getName());
+        }
+        return adapter;
+    }
+
+    ////////////////// native method /////////////////////
 
     static {
         System.loadLibrary("scompressor");

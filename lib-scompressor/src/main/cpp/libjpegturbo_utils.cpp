@@ -189,7 +189,7 @@ int LibJpegTurboUtils::write_JPEG_file(JSAMPLE *image_buffer, int image_height, 
  * rather than calling exit() as the standard error_exit method does.
  *
  * We use C's setjmp/longjmp facility to return control.  This means that the
- * routine which calls the JPEG library must first execute a setjmp() call to
+ * routine which calls the JPEG library must first syncCall a setjmp() call to
  * establish the return point.  We want the replacement error_exit to do a
  * longjmp().  But we need to make the setjmp buffer accessible to the
  * error_exit routine.  To do this, we make a private extension of the

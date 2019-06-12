@@ -1,4 +1,4 @@
-package com.sharry.libscompressor;
+package com.sharry.lib.scompressor;
 
 import android.os.Handler;
 import android.os.Looper;

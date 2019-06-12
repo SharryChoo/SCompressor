@@ -1,4 +1,4 @@
-package com.sharry.libscompressor;
+package com.sharry.lib.scompressor;
 
 import android.graphics.Bitmap;
 import android.support.annotation.Dimension;
@@ -18,6 +18,8 @@ import static android.support.annotation.Dimension.PX;
  * @since 2018/9/29 13:03
  */
 public class Request<InputType, OutputType> {
+
+    public static final int INVALIDATE = -1;
 
     /**
      * Input source associated with this compress task.
@@ -111,10 +113,12 @@ public class Request<InputType, OutputType> {
 
         /**
          * Set source image file path associated with this compress task.
+         * <p>
+         * The efficiency is nice.
          */
-        public Builder<String, OutputType> setSrcPath(@NonNull final String srcPath) {
+        public Builder<String, OutputType> setInputPath(@NonNull final String srcPath) {
             Preconditions.checkNotNull(srcPath);
-            this.inputSource = new DataSource<String>() {
+            return setInputSource(new DataSource<String>() {
                 @NonNull
                 @Override
                 public Class<String> getType() {
@@ -126,16 +130,17 @@ public class Request<InputType, OutputType> {
                 public String getSource() {
                     return srcPath;
                 }
-            };
-            return asInput(String.class);
+            });
         }
 
         /**
          * Set source image bitmap associated with this compress task.
+         * <p>
+         * The efficiency is low.
          */
-        public Builder<Bitmap, OutputType> setSrcBitmap(@NonNull final Bitmap srcBitmap) {
+        public Builder<Bitmap, OutputType> setInputBitmap(@NonNull final Bitmap srcBitmap) {
             Preconditions.checkNotNull(srcBitmap);
-            this.inputSource = new DataSource<Bitmap>() {
+            return setInputSource(new DataSource<Bitmap>() {
                 @NonNull
                 @Override
                 public Class<Bitmap> getType() {
@@ -147,8 +152,18 @@ public class Request<InputType, OutputType> {
                 public Bitmap getSource() {
                     return srcBitmap;
                 }
-            };
-            return asInput(Bitmap.class);
+            });
+        }
+
+        /**
+         * Set u custom input source.
+         *
+         * @param inputSource desc input source.
+         */
+        public <NewInputType> Builder<NewInputType, OutputType> setInputSource(
+                @NonNull DataSource<NewInputType> inputSource) {
+            this.inputSource = inputSource;
+            return asInput(inputSource.getType());
         }
 
         /**
@@ -179,14 +194,27 @@ public class Request<InputType, OutputType> {
          */
         public Builder<InputType, String> setOutputPath(@NonNull final String outputPath) {
             Preconditions.checkNotEmpty(outputPath);
-            return asString(outputPath);
+            return setOutputSource(new DataSource<String>() {
+
+                @NonNull
+                @Override
+                public Class<String> getType() {
+                    return String.class;
+                }
+
+                @Override
+                public String getSource() {
+                    return outputPath;
+                }
+
+            });
         }
 
         /**
          * Convert output type to Bitmap
          */
         public Builder<InputType, Bitmap> asBitmap() {
-            this.outputSource = new DataSource<Bitmap>() {
+            return setOutputSource(new DataSource<Bitmap>() {
                 @NonNull
                 @Override
                 public Class<Bitmap> getType() {
@@ -198,15 +226,14 @@ public class Request<InputType, OutputType> {
                 public Bitmap getSource() {
                     return null;
                 }
-            };
-            return asOutput(Bitmap.class);
+            });
         }
 
         /**
          * Convert output type to byte array.
          */
         public Builder<InputType, byte[]> asByteArray() {
-            this.outputSource = new DataSource<byte[]>() {
+            return setOutputSource(new DataSource<byte[]>() {
                 @NonNull
                 @Override
                 public Class<byte[]> getType() {
@@ -218,8 +245,19 @@ public class Request<InputType, OutputType> {
                 public byte[] getSource() {
                     return null;
                 }
-            };
-            return asOutput(byte[].class);
+            });
+        }
+
+        /**
+         * Set u custom output source.
+         *
+         * @param outputDataSource desc output data source.
+         */
+        public <NewOutputType> Builder<InputType, NewOutputType> setOutputSource(
+                @NonNull DataSource<NewOutputType> outputDataSource) {
+            Preconditions.checkNotNull(outputDataSource);
+            this.outputSource = outputDataSource;
+            return asOutput(outputDataSource.getType());
         }
 
         /**
@@ -227,7 +265,7 @@ public class Request<InputType, OutputType> {
          *
          * @param callback the callback when compress complete.
          */
-        public void commit(@NonNull CompressCallback<OutputType> callback) {
+        public void asyncCall(@NonNull CompressCallback<OutputType> callback) {
             Preconditions.checkNotNull(callback);
             SCompressor.asyncCall(
                     new Request<InputType, OutputType>(
@@ -245,7 +283,7 @@ public class Request<InputType, OutputType> {
          * Execute sync task.
          */
         @Nullable
-        public OutputType execute() {
+        public OutputType syncCall() {
             return SCompressor.syncCall(
                     new Request<InputType, OutputType>(
                             inputSource,
@@ -256,27 +294,6 @@ public class Request<InputType, OutputType> {
                             null
                     )
             );
-        }
-
-        /**
-         * Convert output type to string
-         */
-        private Builder<InputType, String> asString(final String destPath) {
-            this.outputSource = new DataSource<String>() {
-
-                @NonNull
-                @Override
-                public Class<String> getType() {
-                    return String.class;
-                }
-
-                @Override
-                public String getSource() {
-                    return destPath;
-                }
-
-            };
-            return asOutput(String.class);
         }
 
         /**

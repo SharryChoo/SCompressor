@@ -10,8 +10,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.sharry.libscompressor.CompressCallback;
-import com.sharry.libscompressor.SCompressor;
+import com.sharry.lib.scompressor.CompressCallback;
+import com.sharry.lib.scompressor.SCompressor;
 import com.sharry.picturepicker.facade.IPictureLoaderEngine;
 import com.sharry.picturepicker.facade.PickerCallback;
 import com.sharry.picturepicker.facade.PickerConfig;
@@ -63,11 +63,11 @@ public class MainActivity extends AppCompatActivity {
     private void doCompress(String url) {
         // 进行图片压缩
         SCompressor.create()
-                .setSrcPath(url)
+                .setInputPath(url)
                 .setDesireSize(600, 800)
                 .setQuality(70)
                 .asBitmap()
-                .commit(new CompressCallback<Bitmap>() {
+                .asyncCall(new CompressCallback<Bitmap>() {
                     @Override
                     public void onCompressComplete(@NonNull Bitmap compressedData) {
                         ivSample.setImageBitmap(compressedData);

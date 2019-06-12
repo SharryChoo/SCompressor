@@ -1,4 +1,4 @@
-package com.sharry.libscompressor;
+package com.sharry.lib.scompressor;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -6,6 +6,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The facade of picture compressor.
@@ -16,14 +18,43 @@ import java.io.File;
  */
 public class SCompressor {
 
-    static File mUsableDir;
+    static final List<InputAdapter> INPUT_ADAPTERS = new ArrayList<>();
+    static final List<OutputAdapter> OUTPUT_ADAPTERS = new ArrayList<>();
+
+    static {
+        // add default input adapters.
+        INPUT_ADAPTERS.add(new InputFilePathAdapter());
+        INPUT_ADAPTERS.add(new InputBitmapAdapter());
+        // add default output adapters.
+        OUTPUT_ADAPTERS.add(new OutputBitmapAdapter());
+        OUTPUT_ADAPTERS.add(new OutputFilePathAdapter());
+        OUTPUT_ADAPTERS.add(new OutputByteArrayAdapter());
+    }
+
+    static File usableDir;
 
     /**
      * Init usable Dir, helper generate temp file.
      */
     public static void init(@NonNull Context context) {
         Preconditions.checkNotNull(context, "Please ensure context non null!");
-        mUsableDir = context.getCacheDir();
+        usableDir = context.getCacheDir();
+    }
+
+    /**
+     * Add u custom input source adapter from here.
+     */
+    public static void addInputAdapter(@NonNull InputAdapter adapter) {
+        Preconditions.checkNotNull(adapter);
+        INPUT_ADAPTERS.add(adapter);
+    }
+
+    /**
+     * Add u custom output source adapter from here.
+     */
+    public static void addOutputAdapter(@NonNull OutputAdapter adapter) {
+        Preconditions.checkNotNull(adapter);
+        OUTPUT_ADAPTERS.add(adapter);
     }
 
     /**
@@ -52,4 +83,5 @@ public class SCompressor {
         Preconditions.checkNotNull(request.inputSource, "Please ensure Request.inputSource non null!");
         return CompressDispatcher.syncDispatcher(request);
     }
+
 }

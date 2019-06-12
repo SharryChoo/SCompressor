@@ -12,7 +12,7 @@ typedef unsigned char uchar;
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_sharry_libscompressor_Core_nativeCompress(JNIEnv *env, jclass type, jobject bitmap,
+Java_com_sharry_lib_scompressor_Core_nativeCompress(JNIEnv *env, jclass type, jobject bitmap,
                                                    jint quality, jstring destPath_) {
     // 1. 获取 bitmap 信息
     AndroidBitmapInfo info;
@@ -21,9 +21,9 @@ Java_com_sharry_libscompressor_Core_nativeCompress(JNIEnv *env, jclass type, job
     int rows = info.height;
     int format = info.format;
     LOGI("Bitmap width is %d, height is %d", cols, rows);
-    // 若不为 ARGB8888, 则不给予压缩
+    // 若不为 ARGB_8888, 则不给予压缩
     if (format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-        LOGE("Unsupported Bitmap channels, Please ensure channels is ARGB_8888.");
+        LOGE("Unsupported Bitmap channels, Please ensure channels is ARGB_8888, current is %d", format);
         return false;
     }
     // 2. 解析数据

@@ -1,4 +1,4 @@
-package com.sharry.libscompressor;
+package com.sharry.lib.scompressor;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
