@@ -39,6 +39,8 @@ public class Request<InputType, OutputType> {
 
     /**
      * Control auto down sample or not.
+     * <p>
+     * default is true.
      */
     final boolean isSupportDownSample;
 
@@ -79,13 +81,12 @@ public class Request<InputType, OutputType> {
     @Override
     public String toString() {
         return "SCompressor Request{" +
-                "inputSource=" + inputSource +
-                ", outputSource=" + outputSource +
-                ", quality=" + quality +
-                ", isAutoDownSample=" + isSupportDownSample +
-                ", destWidth=" + destWidth +
-                ", destHeight=" + destHeight +
-                ", callback=" + callback +
+                "inputSource = " + inputSource.getType().getSimpleName() +
+                ", outputSource = " + outputSource.getType().getSimpleName() +
+                ", quality = " + quality +
+                ", isAutoDownSample = " + isSupportDownSample +
+                ", destWidth = " + destWidth +
+                ", destHeight = " + destHeight +
                 '}';
     }
 
@@ -296,9 +297,9 @@ public class Request<InputType, OutputType> {
         }
 
         /**
-         * Execute async task.
+         * Execute async task with lambda callback.
          *
-         * @param lambdaCallback the callback when compress complete.
+         * @param lambdaCallback the lambda callback related on async task.
          */
         public void asyncCall(@NonNull final CompressCallbackLambda<OutputType> lambdaCallback) {
             Preconditions.checkNotNull(lambdaCallback);
@@ -317,9 +318,9 @@ public class Request<InputType, OutputType> {
         }
 
         /**
-         * Execute async task.
+         * Execute async task with callback.
          *
-         * @param callback the callback when compress complete.
+         * @param callback the callback related on async task.
          */
         public void asyncCall(@NonNull CompressCallback<OutputType> callback) {
             Preconditions.checkNotNull(callback);
