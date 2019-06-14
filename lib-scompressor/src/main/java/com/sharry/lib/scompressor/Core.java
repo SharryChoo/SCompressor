@@ -58,8 +58,12 @@ final class Core {
             tempFile.delete();
         }
         // 2.3 Quality compress
-        File outputFile = String.class.equals(outputSource.getType()) ?
-                new File((String) outputSource.getSource()) : createUnsuspectedFile();
+        File outputFile;
+        if (String.class.equals(outputSource.getType()) && outputSource.getSource() != null) {
+            outputFile = new File((String) outputSource.getSource());
+        } else {
+            outputFile = createUnsuspectedFile();
+        }
         int compressStatus = nativeCompress(downSampleBitmap, request.quality, outputFile.getAbsolutePath());
         // Verify compress result.
         if (compressStatus == 0) {

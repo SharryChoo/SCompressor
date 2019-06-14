@@ -100,9 +100,23 @@ public class Request<InputType, OutputType> {
 
         private static final int DEFAULT_QUALITY = 75;
         private static final int INVALIDATE = -1;
+        private static final DataSource DEFAULT_OUTPUT_DATA_SOURCE = new DataSource<String>() {
+
+            @NonNull
+            @Override
+            public Class<String> getType() {
+                return String.class;
+            }
+
+            @Nullable
+            @Override
+            public String getSource() {
+                return null;
+            }
+        };
 
         private DataSource inputSource;
-        private DataSource outputSource;
+        private DataSource outputSource = DEFAULT_OUTPUT_DATA_SOURCE;
         private int quality = DEFAULT_QUALITY;
         private boolean isAutoDownSample = true;
         private int desireWidth = INVALIDATE;
@@ -324,6 +338,7 @@ public class Request<InputType, OutputType> {
          */
         public void asyncCall(@NonNull CompressCallback<OutputType> callback) {
             Preconditions.checkNotNull(callback);
+            Preconditions.checkNotNull(inputSource);
             SCompressor.asyncCall(
                     new Request<InputType, OutputType>(
                             inputSource,
@@ -342,6 +357,7 @@ public class Request<InputType, OutputType> {
          */
         @Nullable
         public OutputType syncCall() {
+            Preconditions.checkNotNull(inputSource);
             return SCompressor.syncCall(
                     new Request<InputType, OutputType>(
                             inputSource,
