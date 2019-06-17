@@ -2,6 +2,7 @@
 ## About
 A framework that help u compress picture more easier.(Core is [libjpeg-turbo 2.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/2.0.2))
 
+[中文文档](https://sharrychoo.github.io/blog/android/2019/06/17/Android-%E5%9B%BE%E7%89%87%E5%8E%8B%E7%BC%A9%E6%A1%86%E6%9E%B6-SCompressor.html)
 ---
 ## Current Version 
 [![](https://jitpack.io/v/SharryChoo/SCompressor.svg)](https://jitpack.io/#SharryChoo/SCompressor)
@@ -24,14 +25,14 @@ Add it in your **module build.gradle** at the end of dependencies
 ```
 dependencies {
     ...
-    implementation 'com.github.SharryChoo:SCompressor:1.0'
+    implementation 'com.github.SharryChoo:SCompressor:x.x.x'
 }
 ```
 
 ---
 ## How to use
-### Initailize
-Initailize at application create.
+### Initialize
+Initialize at application create.
 ```
 SCompressor.init(this);
 ```
@@ -75,11 +76,16 @@ Use input file path can get nice efficiency.
 
 If u custom input source, u need implement InputAdapter and add it.
 
-### Setup quality
+### Setup options
 ```
 SCompressor.create()
         .setInputPath(url)
+        // range of 0 ~ 100.
         .setQuality(70)
+        // set desire output size.
+        .setDesireSize(500, 1000)
+        // default is true: If u don't set desire size, it will auto down sample.
+        .setAutoDownSample(true)
         ......
 ```
 
@@ -126,6 +132,8 @@ SCompressor.create()
        })
         ......        
 ```
+The default output source is file path.
+
 If u custom output source, u need implement OuputAdapter and add it.
 
 ### Asynchronous Call
