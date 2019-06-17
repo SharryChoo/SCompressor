@@ -1,5 +1,5 @@
 ## About
-A framework that help u compress picture more easier.(Core is libjpeg-turbo)
+A framework that help u compress picture more easier.(Core is [libjpeg-turbo 2.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/2.0.2))
 
 ## Current Version 
 [![](https://jitpack.io/v/SharryChoo/SCompressor.svg)](https://jitpack.io/#SharryChoo/SCompressor)
