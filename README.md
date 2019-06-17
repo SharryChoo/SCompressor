@@ -1,5 +1,5 @@
 ## About
-The picture scompressor base on libjpeg-turbo.
+A framework that help u compressed picture more easier.(Core is libjpeg-turbo)
 
 ## Current Version 
 [![](https://jitpack.io/v/SharryChoo/SCompressor.svg)](https://jitpack.io/#SharryChoo/SCompressor)
