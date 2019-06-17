@@ -3,6 +3,7 @@
 A framework that help u compress picture more easier.(Core is [libjpeg-turbo 2.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/2.0.2))
 
 [中文文档](https://sharrychoo.github.io/blog/android/2019/06/17/Android-%E5%9B%BE%E7%89%87%E5%8E%8B%E7%BC%A9%E6%A1%86%E6%9E%B6-SCompressor.html)
+
 ---
 ## Current Version 
 [![](https://jitpack.io/v/SharryChoo/SCompressor.svg)](https://jitpack.io/#SharryChoo/SCompressor)
