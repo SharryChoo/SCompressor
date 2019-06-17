@@ -65,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
         SCompressor.create()
                 .setInputPath(url)
                 .setQuality(70)
+                .setAutoDownSample(true)
+                .setDesireSize(500, 1000)
                 .asBitmap()
                 .asyncCall(new CompressCallbackLambda<Bitmap>() {
                     @Override
