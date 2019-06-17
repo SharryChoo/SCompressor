@@ -1,9 +1,12 @@
+---
 ## About
 A framework that help u compress picture more easier.(Core is [libjpeg-turbo 2.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/2.0.2))
 
+---
 ## Current Version 
 [![](https://jitpack.io/v/SharryChoo/SCompressor.svg)](https://jitpack.io/#SharryChoo/SCompressor)
 
+---
 ## How to integration
 ### Step 1
 Add it in your **root build.gradle** at the end of repositories
@@ -25,6 +28,7 @@ dependencies {
 }
 ```
 
+---
 ## How to use
 ### Initailize
 Initailize at application create.
@@ -210,7 +214,7 @@ OutputAdapter<Object> myOutputAdapter = new OutputAdapter<Object>() {
 // Add to scompressor.
 SCompressor.addOutputAdapter(myOutputAdapter);
 ```
-
+---
 ## License
 ```
 Copyright 2019 drakeet.
