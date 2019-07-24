@@ -45,14 +45,14 @@ Java_com_sharry_lib_scompressor_Core_nativeCompress(JNIEnv *env, jclass type, jo
             // 2.1 获取像素值
             pixel = *((int *) pixels);
             // ...                                              // 忽略 A 通道值
-            r = static_cast<uchar>((pixel & 0x00FF0000) >> 16); // 获取 R 通道值
+            b = static_cast<uchar>((pixel & 0x00FF0000) >> 16); // 获取 B 通道值
             g = static_cast<uchar>((pixel & 0x0000FF00) >> 8);  // 获取 G 通道值
-            b = static_cast<uchar>((pixel & 0x000000FF));       // 获取 B 通道值
+            r = static_cast<uchar>((pixel & 0x000000FF));       // 获取 R 通道值
             pixels += 4;
             // 2.2 为 Data 填充数据
-            *(data++) = b;
-            *(data++) = g;
             *(data++) = r;
+            *(data++) = g;
+            *(data++) = b;
         }
     }
     // 解锁画布
