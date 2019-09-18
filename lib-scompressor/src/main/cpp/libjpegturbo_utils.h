@@ -36,6 +36,7 @@ public:
      * @return 1 is success, 0 is failed.
      */
     static int read_JPEG_file(char *filename);
+
 };
 
 

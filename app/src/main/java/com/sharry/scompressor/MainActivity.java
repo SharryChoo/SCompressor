@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -23,12 +24,18 @@ import com.sharry.lib.scompressor.Core;
 import com.sharry.lib.scompressor.SCompressor;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ImageView ivSample;
-    private Button btnPicker;
+    private static final String TAG = MainActivity.class.getSimpleName();
+
+    private Button mBtnPicker;
+    private ImageView mIvSkiaCompressed;
+    private ImageView mIvScompressorCompressed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,12 +43,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         SCompressor.init(this);
         initViews();
+
     }
 
     private void initViews() {
-        ivSample = findViewById(R.id.sample_image);
-        btnPicker = findViewById(R.id.btn_picker);
-        btnPicker.setOnClickListener(new View.OnClickListener() {
+        mBtnPicker = findViewById(R.id.btn_picker);
+        mIvSkiaCompressed = findViewById(R.id.iv_skia_compressed);
+        mIvScompressorCompressed = findViewById(R.id.iv_scompressor_compressed);
+        mBtnPicker = findViewById(R.id.btn_picker);
+        mBtnPicker.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 PickerManager.with(v.getContext())
@@ -69,27 +79,59 @@ public class MainActivity extends AppCompatActivity {
                         .start(new PickerCallback() {
                             @Override
                             public void onPickedComplete(@NonNull ArrayList<MediaMeta> arrayList) {
-                                doCompress(arrayList.get(0).getPath());
+                                doCompress(arrayList.get(0));
                             }
                         });
             }
         });
     }
 
-    private void doCompress(String url) {
-        Bitmap bitmap = BitmapFactory.decodeFile(url);
-        Log.e("TAG", "origin file length is " + new File(url).length() / 1024 + "kb");
+    private final String usableDir = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "SCompressor";
+
+    private void doCompress(MediaMeta mediaMeta) {
+        File dir = new File(usableDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        Log.e(TAG, "Origin file length is " + new File(mediaMeta.getPath()).length() / 1024 + "kb");
+        Bitmap bitmap = BitmapFactory.decodeFile(mediaMeta.getPath());
+        // SCompressor 压缩
+        File destFile = new File(dir, "SCompressor_" + System.currentTimeMillis() + ".jpg");
+        performCompressBySCompressor(bitmap, destFile);
+        bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
+        mIvScompressorCompressed.setImageBitmap(bitmap);
+        // Skia 压缩
+        destFile = new File(dir, "Skia_" + System.currentTimeMillis() + ".jpg");
+        performCompressByAndroidSkia(bitmap, destFile);
+        bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
+        mIvSkiaCompressed.setImageBitmap(bitmap);
+    }
+
+    private void performCompressByAndroidSkia(Bitmap bitmap, File file) {
         long startTime = System.currentTimeMillis();
-        File file = new File(getCacheDir(), startTime + ".jpg");
-        // libjpeg-turbo .
-        Core.nativeCompress(bitmap, 60, file.getAbsolutePath());
         // Android system.
-        // bitmap.compress(Bitmap.CompressFormat.JPEG, 60, new FileOutputStream(file));
+        try {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 10, new FileOutputStream(file));
+        } catch (FileNotFoundException e) {
+            // ignore.
+        }
         long endTime = System.currentTimeMillis();
-        Log.e("TAG", "file length is " + (file.length() / 1024) + "kb, cost time is " + (endTime - startTime) + "ms");
-        // show img.
-        bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-        ivSample.setImageBitmap(bitmap);
+        Log.e(
+                TAG,
+                "Skia compressed file length is " + (file.length() / 1024) + "kb, " +
+                        "cost time is " + (endTime - startTime) + "ms"
+        );
+    }
+
+    private void performCompressBySCompressor(Bitmap bitmap, File file) {
+        long startTime = System.currentTimeMillis();
+        Core.nativeCompress(bitmap, 10, file.getAbsolutePath());
+        long endTime = System.currentTimeMillis();
+        Log.e(
+                TAG,
+                "SCompressor compressed file length is " + (file.length() / 1024) + "kb, " +
+                        "cost time is " + (endTime - startTime) + "ms"
+        );
     }
 
 }

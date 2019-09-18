@@ -25,6 +25,7 @@ TARGET_LINK_LIBRARIES(
         scompressor
         # 外部链接库
         jpeg
+        turbojpeg
         # Anroid libs
         jnigraphics
         log
