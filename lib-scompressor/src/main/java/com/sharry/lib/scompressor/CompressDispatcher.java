@@ -1,6 +1,6 @@
 package com.sharry.lib.scompressor;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import java.util.concurrent.ArrayBlockingQueue;

@@ -18,7 +18,7 @@ import static com.sharry.lib.scompressor.SCompressor.TAG;
  * @version 1.0
  * @since 4/11/2019 4:53 PM
  */
-final class Core {
+public final class Core {
 
     private static final String SUFFIX_JPEG = ".jpg";
     private static final String UNSUSPECTED_FILE_PREFIX = "SCompressor_";
@@ -46,7 +46,7 @@ final class Core {
                 Log.i(TAG, "Cannot support auto down sample");
             }
         } else {
-            Core.calculateSampleSize(inputFilePath, request.destWidth, request.destHeight);
+            options.inSampleSize = Core.calculateSampleSize(inputFilePath, request.destWidth, request.destHeight);
         }
         Bitmap downSampleBitmap = BitmapFactory.decodeFile(inputFilePath, options);
         // 2.2 Try to rotate Bitmap
@@ -226,6 +226,6 @@ final class Core {
         System.loadLibrary("scompressor");
     }
 
-    private static native int nativeCompress(Bitmap bitmap, int quality, String destPath);
+    public static native int nativeCompress(Bitmap bitmap, int quality, String destPath);
 
 }

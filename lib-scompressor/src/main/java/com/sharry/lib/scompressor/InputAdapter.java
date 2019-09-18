@@ -1,6 +1,6 @@
 package com.sharry.lib.scompressor;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * The adapter related on user input data.

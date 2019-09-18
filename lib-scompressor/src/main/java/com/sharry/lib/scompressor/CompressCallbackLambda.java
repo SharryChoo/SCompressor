@@ -1,6 +1,6 @@
 package com.sharry.lib.scompressor;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * 图片压缩任务的回调

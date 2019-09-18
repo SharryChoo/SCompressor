@@ -1,6 +1,6 @@
 package com.sharry.lib.scompressor;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

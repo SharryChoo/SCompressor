@@ -1,13 +1,13 @@
 package com.sharry.lib.scompressor;
 
 import android.graphics.Bitmap;
-import android.support.annotation.Dimension;
-import android.support.annotation.IntRange;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.Dimension;
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
-import static android.support.annotation.Dimension.PX;
+import static androidx.annotation.Dimension.PX;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
 
 
