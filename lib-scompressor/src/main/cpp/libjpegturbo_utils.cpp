@@ -51,7 +51,7 @@
 #include <setjmp.h>
 
 int LibJpegTurboUtils::write_JPEG_file(JSAMPLE *image_buffer, int image_height, int image_width,
-                                  char *filename, int quality) {
+                                       char *filename, int quality) {
     /* This struct contains the JPEG compression parameters and pointers to
      * working space (which is allocated as needed by the JPEG library).
      * It is possible to have several such structures, representing multiple
@@ -107,11 +107,19 @@ int LibJpegTurboUtils::write_JPEG_file(JSAMPLE *image_buffer, int image_height, 
     cinfo.image_height = image_height;
     cinfo.input_components = 3;           /* # of color components per pixel */
     cinfo.in_color_space = JCS_RGB;       /* colorspace of input image */
+
     /* Now use the library's routine to set default compression parameters.
-     * (You must set at least cinfo.in_color_space before calling this,
-     * since the defaults depend on the source color space.)
-     */
+        * (You must set at least cinfo.in_color_space before calling this,
+        * since the defaults depend on the source color space.)
+        */
     jpeg_set_defaults(&cinfo);
+
+//    cinfo.optimize_coding = TRUE;         /* TRUE=optimize entropy encoding parms */
+    /**
+     * 使用性能更好的算术编码
+     */
+    cinfo.arith_code = TRUE;              /* TRUE=arithmetic coding, FALSE=Huffman */
+
     /* Now you can set any non-default parameters you wish to.
      * Here we just illustrate the use of quality (quantization table) scaling:
      */

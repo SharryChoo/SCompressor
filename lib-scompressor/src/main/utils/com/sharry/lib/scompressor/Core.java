@@ -18,7 +18,7 @@ import static com.sharry.lib.scompressor.SCompressor.TAG;
  * @version 1.0
  * @since 4/11/2019 4:53 PM
  */
-public final class Core {
+final class Core {
 
     private static final String SUFFIX_JPEG = ".jpg";
     private static final String UNSUSPECTED_FILE_PREFIX = "SCompressor_";
@@ -226,6 +226,6 @@ public final class Core {
         System.loadLibrary("scompressor");
     }
 
-    public static native int nativeCompress(Bitmap bitmap, int quality, String destPath);
+    static native int nativeCompress(Bitmap bitmap, int quality, String destPath);
 
 }

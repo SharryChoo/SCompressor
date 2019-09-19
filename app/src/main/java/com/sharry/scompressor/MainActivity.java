@@ -20,13 +20,11 @@ import com.sharry.lib.album.MediaMeta;
 import com.sharry.lib.album.PickerCallback;
 import com.sharry.lib.album.PickerConfig;
 import com.sharry.lib.album.PickerManager;
-import com.sharry.lib.scompressor.Core;
 import com.sharry.lib.scompressor.SCompressor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -111,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
         long startTime = System.currentTimeMillis();
         // Android system.
         try {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 10, new FileOutputStream(file));
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, new FileOutputStream(file));
         } catch (FileNotFoundException e) {
             // ignore.
         }
@@ -125,7 +123,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void performCompressBySCompressor(Bitmap bitmap, File file) {
         long startTime = System.currentTimeMillis();
-        Core.nativeCompress(bitmap, 10, file.getAbsolutePath());
+        SCompressor.create()
+                .setAutoDownSample(false)
+                .setInputBitmap(bitmap)
+                .setOutputPath(file.getAbsolutePath())
+                .setQuality(50)
+                .syncCall();
         long endTime = System.currentTimeMillis();
         Log.e(
                 TAG,
