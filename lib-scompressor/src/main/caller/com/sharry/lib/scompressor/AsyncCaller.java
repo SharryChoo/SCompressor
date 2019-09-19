@@ -19,9 +19,9 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0
  * @since 2018/8/30  16:31
  */
-final class AsyncCall {
+final class AsyncCaller {
 
-    private static final String TAG = AsyncCall.class.getSimpleName();
+    private static final String TAG = AsyncCaller.class.getSimpleName();
 
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
@@ -31,7 +31,7 @@ final class AsyncCall {
             @Override
             public void run() {
                 try {
-                    final OutputType data = SyncCall.execute(request);
+                    final OutputType data = SyncCaller.execute(request);
                     MAIN_HANDLER.post(new Runnable() {
                         @Override
                         public void run() {
