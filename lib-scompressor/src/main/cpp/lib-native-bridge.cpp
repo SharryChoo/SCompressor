@@ -1,18 +1,12 @@
 #include <jni.h>
 #include <malloc.h>
 #include <android/bitmap.h>
-#include <android/log.h>
 #include "libjpegturbo_utils.h"
+#include "Constants.h"
 
-#define TAG "SCompressor_Native"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
+void cvtABGR8888ToRGB888(void *src, uchar *dst, int rows, int cols);
 
-typedef unsigned char uchar;
-
-void parseRGBA8888(uchar *pixels, int rows, int cols, uchar *dst);
-
-void parseRGB565(uchar *pixels, int rows, int cols, uchar *dst);
+void cvtRGB565ToRGB888(void *src, uchar *dst, int rows, int cols);
 
 extern "C"
 JNIEXPORT jint JNICALL
@@ -26,82 +20,87 @@ Java_com_sharry_lib_scompressor_Core_nativeCompress(JNIEnv *env, jclass type, jo
     int rows = info.height;
     int format = info.format;
     LOGI("Bitmap width is %d, height is %d", cols, rows);
-    // 若不为 ARGB_8888, 则不给予压缩
+    // 若非 ARGB_8888/RGB_565 则不给予压缩
     if (format != ANDROID_BITMAP_FORMAT_RGBA_8888 && format != ANDROID_BITMAP_FORMAT_RGB_565) {
         LOGE("Unsupported Bitmap channels, Please ensure channels is ARGB_8888, current is %d",
              format);
         return false;
     }
+
     // 2. 解析数据
     LOGI("Parse bitmap pixels");
     // 锁定画布
-    uchar *pixels = NULL;
-    AndroidBitmap_lockPixels(env, bitmap, (void **) &pixels);
+    void *pixels = NULL;
+    AndroidBitmap_lockPixels(env, bitmap, &pixels);
     if (pixels == NULL) {
         LOGE("Fetch Bitmap data failed.");
         return false;
     }
     // 创建存储数组
-    uchar *data = (uchar *) malloc(static_cast<size_t>(cols * rows * 3));
-    uchar *data_header_pointer = data;// 临时保存 data 的首地址, 用于后续释放内存
+    uchar *image_buffer = new uchar[cols * rows * 3];;
     if (format == ANDROID_BITMAP_FORMAT_RGBA_8888) {
-        parseRGBA8888(pixels, rows, cols, data);
+        cvtABGR8888ToRGB888(pixels, image_buffer, rows, cols);
     } else {
-        parseRGB565(pixels, rows, cols, data);
+        cvtRGB565ToRGB888(pixels, image_buffer, rows, cols);
     }
-
     // 解锁画布
     AndroidBitmap_unlockPixels(env, bitmap);
 
     // 3. 使用 libjpeg 进行图片质量压缩
     LOGI("libjpeg-turbo do compress");
     char *output_filename = (char *) (env)->GetStringUTFChars(destPath_, NULL);
-    int result = LibJpegTurboUtils::write_JPEG_file(data_header_pointer, rows, cols,
+    int result = LibJpegTurboUtils::write_JPEG_file(image_buffer, rows, cols,
                                                     output_filename, quality,
                                                     arith_code ? TRUE : FALSE);
+
     // 4. 释放资源
     LOGI("Release memory");
-    free((void *) data_header_pointer);
+    delete[]image_buffer;
     env->ReleaseStringUTFChars(destPath_, output_filename);
     return result;
 }
 
-void parseRGBA8888(uchar *pixels, int rows, int cols, uchar *dst) {
+
+void cvtABGR8888ToRGB888(void *src, uchar *dst, int rows, int cols) {
+    int *pixels = static_cast<int *>(src);
     uchar r, g, b;
     int row = 0, col = 0, pixel;
     for (row = 0; row < rows; ++row) {
         for (col = 0; col < cols; ++col) {
-            // 2.1 获取像素值
-            pixel = *((int *) pixels);
-            // ...                                              // 忽略 A 通道值
-            r = static_cast<uchar>((pixel & 0x00FF0000) >> 16); // 获取 R 通道值
-            g = static_cast<uchar>((pixel & 0x0000FF00) >> 8);  // 获取 G 通道值
-            b = static_cast<uchar>((pixel & 0x000000FF));       // 获取 B 通道值
-            pixels += 4;
-            // 2.2 为 Data 填充数据
+            // 获取像素值
+            pixel = *pixels;
+            // ...                                                       // 忽略 A 通道值
+            b = static_cast<uchar>((pixel & ABGR8888_MASK_BLUE) >> 16);  // 获取 B 通道值
+            g = static_cast<uchar>((pixel & ABGR8888_MASK_GREEN) >> 8);  // 获取 G 通道值
+            r = static_cast<uchar>((pixel & ABGR8888_MASK_RED));         // 获取 R 通道值
+            // 为 Data 填充数据
             *(dst++) = r;
             *(dst++) = g;
             *(dst++) = b;
+            // 更新首地址
+            pixels += 1;
         }
     }
 }
 
-void parseRGB565(uchar *pixels, int rows, int cols, uchar *dst) {
+void cvtRGB565ToRGB888(void *src, uchar *dst, int rows, int cols) {
+    uint16_t *pixels = static_cast<uint16_t *>(src);
     uchar r, g, b;
-    int row = 0, col = 0, pixel;
+    int row = 0, col = 0;
+    uint16_t pixel;
     for (row = 0; row < rows; ++row) {
         for (col = 0; col < cols; ++col) {
-            // 2.1 获取像素值
-            pixel = *((short *) pixels);
-            r = static_cast<uchar>((pixel & 0x00FF0000) >> 16); // 获取 R 通道值
-            g = static_cast<uchar>((pixel & 0x0000FF00) >> 8);  // 获取 G 通道值
-            b = static_cast<uchar>((pixel & 0x000000FF));       // 获取 B 通道值
-            // ...                                              // 忽略 A 通道值
-            pixels += 4;
-            // 2.2 为 Data 填充数据
-            *(dst++) = b;
-            *(dst++) = g;
-            *(dst++) = r;
+            // 获取像素值
+            pixel = *pixels;
+            r = static_cast<uchar>((pixel & RGB565_MASK_RED) >> 11);   // 获取 R 通道值
+            g = static_cast<uchar>((pixel & RGB565_MASK_GREEN) >> 5);  // 获取 G 通道值
+            b = static_cast<uchar>((pixel & RGB565_MASK_BLUE));        // 获取 B 通道值
+            // 填充到 dst 中
+            *(dst++) = r << 3;
+            *(dst++) = g << 2;
+            *(dst++) = b << 3;
+            // 更新指针首地址
+            pixels += 1;
         }
     }
 }

@@ -9,7 +9,7 @@ import androidx.annotation.Nullable;
  * @version 1.0
  * @since 2018/8/27 22:14
  */
-public interface CompressCallbackLambda<Output> {
+public interface ICompressorCallbackLambda<Output> {
 
     /**
      * Called when compress task complete
@@ -17,6 +17,6 @@ public interface CompressCallbackLambda<Output> {
      * @param isSuccess      if true is success, false is failed.
      * @param compressedData isSuccess is true it will nonnull, false is null.
      */
-    void onCompressComplete(boolean isSuccess, @Nullable Output compressedData);
+    void onComplete(boolean isSuccess, @Nullable Output compressedData);
 
 }

@@ -137,12 +137,12 @@ SCompressor.create()
         .asBitmap()
         .asyncCall(new CompressCallback<Bitmap>() {
             @Override
-            public void onCompressSuccess(@NonNull Bitmap compressedData) {
+            public void onSuccess(@NonNull Bitmap compressedData) {
                 // ......
             }
 
             @Override
-            public void onCompressFailed(@NonNull Throwable e) {
+            public void onFailed(@NonNull Throwable e) {
                 // ......
             }
         });

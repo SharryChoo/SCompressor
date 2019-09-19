@@ -9,17 +9,17 @@ import androidx.annotation.NonNull;
  * @version 1.0
  * @since 2018/8/27 22:14
  */
-public interface CompressCallback<Output> {
+public interface ICompressorCallback<Output> {
 
     /**
      * Called when compress task complete
      *
      * @param compressedData result is true it will nonnull, false is null.
      */
-    void onCompressSuccess(@NonNull Output compressedData);
+    void onSuccess(@NonNull Output compressedData);
 
     /**
      * Called when compress failed
      */
-    void onCompressFailed(@NonNull Throwable e);
+    void onFailed(@NonNull Throwable e);
 }

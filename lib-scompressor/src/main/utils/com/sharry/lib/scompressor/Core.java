@@ -24,59 +24,6 @@ final class Core {
     private static final String UNSUSPECTED_FILE_PREFIX = "SCompressor_";
     private static final int INVALIDATE = -1;
 
-    static <InputType, OutputType> OutputType execute(Request<InputType, OutputType> request) throws Throwable {
-        // compress
-        DataSource<InputType> inputSource = request.inputSource;
-        DataSource<OutputType> outputSource = request.outputSource;
-        if (inputSource.getSource() == null) {
-            throw new NullPointerException();
-        }
-        Log.i(TAG, request.toString());
-        // 1. Adapter input data 2 input path.
-        String inputFilePath = findInputAdapter(inputSource.getType())
-                .adapt(request, inputSource.getSource());
-        // 2. Do compress.
-        // 2.1 Nearest Neighbour down sampling compress
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        if (request.destWidth == Request.INVALIDATE || request.destHeight == Request.INVALIDATE) {
-            if (request.isAutoDownsample) {
-                options.inSampleSize = Core.calculateSampleSize(inputFilePath);
-            } else {
-                Log.i(TAG, "Cannot support auto down sample");
-            }
-        } else {
-            options.inSampleSize = Core.calculateSampleSize(inputFilePath, request.destWidth, request.destHeight);
-        }
-        Bitmap downsampledBitmap = BitmapFactory.decodeFile(inputFilePath, options);
-        // 2.2 Try to rotate Bitmap
-        downsampledBitmap = Core.rotateBitmap(downsampledBitmap,
-                Core.readImageRotateAngle(inputFilePath));
-        // If the file is unsuspected file, then delete it.
-        if (inputFilePath.startsWith(UNSUSPECTED_FILE_PREFIX)) {
-            File tempFile = new File(inputFilePath);
-            tempFile.delete();
-        }
-        // 2.3 Quality compress
-        File outputFile;
-        if (String.class.equals(outputSource.getType()) && outputSource.getSource() != null) {
-            outputFile = new File((String) outputSource.getSource());
-        } else {
-            outputFile = createUnsuspectedFile();
-        }
-        int compressStatus = nativeCompress(downsampledBitmap, request.quality,
-                outputFile.getAbsolutePath(), request.isArithmeticCoding);
-        // Verify compress result.
-        if (compressStatus == 0) {
-            Log.e(TAG, "Compress failed.");
-            throw new RuntimeException("Native quality compress failed.");
-        }
-        // 3. Adapter 2 target type.
-        Log.i(TAG, "Output file is: " + outputFile.getAbsolutePath());
-        Log.i(TAG, "Output file length is " + outputFile.length() / 1024 + "kb");
-        return findOutputAdapter(outputSource.getType()).adapt(outputFile);
-    }
-
     static File createUnsuspectedFile() throws IOException {
         File tempFile = new File(
                 Preconditions.checkNotNull(SCompressor.usableDir, "If U not set output path, " +
@@ -90,18 +37,18 @@ final class Core {
         return tempFile;
     }
 
-    private static int calculateSampleSize(String filePath) {
+    static int calculateSampleSize(String filePath) {
         return calculateSampleSize(filePath, INVALIDATE, INVALIDATE);
     }
 
-    private static int calculateSampleSize(String filePath, int destWidth, int destHeight) {
+    static int calculateSampleSize(String filePath, int destWidth, int destHeight) {
         int[] dimensions = getDimensions(filePath);
         return (destWidth == INVALIDATE || destHeight == INVALIDATE) ?
                 calculateSampleSize(dimensions[0], dimensions[1]) :
                 calculateSampleSize(dimensions[0], dimensions[1], destWidth, destHeight);
     }
 
-    private static int calculateSampleSize(int srcWidth, int srcHeight) {
+    static int calculateSampleSize(int srcWidth, int srcHeight) {
         srcWidth = srcWidth % 2 == 1 ? srcWidth + 1 : srcWidth;
         srcHeight = srcHeight % 2 == 1 ? srcHeight + 1 : srcHeight;
 
@@ -126,7 +73,7 @@ final class Core {
         }
     }
 
-    private static int calculateSampleSize(int srcWidth, int srcHeight, int destWidth, int destHeight) {
+    static int calculateSampleSize(int srcWidth, int srcHeight, int destWidth, int destHeight) {
         if (srcWidth < destWidth && srcHeight < destHeight) {
             return 1;
         }
@@ -153,7 +100,7 @@ final class Core {
         return powerOfTwoSampleSize;
     }
 
-    private static int readImageRotateAngle(String imagePath) throws IOException {
+    static int readImageRotateAngle(String imagePath) throws IOException {
         int degree = 0;
         ExifInterface exifInterface = new ExifInterface(imagePath);
         int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
@@ -173,7 +120,7 @@ final class Core {
         return degree;
     }
 
-    private static Bitmap rotateBitmap(Bitmap bitmap, int angle) {
+    static Bitmap rotateBitmap(Bitmap bitmap, int angle) {
         if (angle == 0) {
             return bitmap;
         }
@@ -185,7 +132,7 @@ final class Core {
                 bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
-    private static int[] getDimensions(String imagePath) {
+    static int[] getDimensions(String imagePath) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(imagePath, options);
@@ -193,33 +140,6 @@ final class Core {
         return new int[]{options.outWidth, options.outHeight};
     }
 
-    private static <Input> InputAdapter<Input> findInputAdapter(Class<Input> inputType) {
-        InputAdapter<Input> adapter = null;
-        for (InputAdapter inputAdapter : SCompressor.INPUT_ADAPTERS) {
-            if (inputAdapter.isAdapter(inputType)) {
-                adapter = inputAdapter;
-            }
-        }
-        if (adapter == null) {
-            throw new UnsupportedOperationException("Cannot find an adapter that can convert "
-                    + inputType.getName() + " to pre quality compressed bitmap");
-        }
-        return adapter;
-    }
-
-    private static <Target> OutputAdapter<Target> findOutputAdapter(Class<Target> targetType) {
-        OutputAdapter<Target> adapter = null;
-        for (OutputAdapter outputAdapter : SCompressor.OUTPUT_ADAPTERS) {
-            if (outputAdapter.isAdapter(targetType)) {
-                adapter = outputAdapter;
-            }
-        }
-        if (adapter == null) {
-            throw new UnsupportedOperationException("Cannot find an adapter that can convert " +
-                    "compressed file path to" + targetType.getName());
-        }
-        return adapter;
-    }
 
     ////////////////// native method /////////////////////
 

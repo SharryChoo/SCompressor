@@ -2,6 +2,7 @@ package com.sharry.lib.scompressor;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -16,7 +17,7 @@ import java.util.List;
  * @version 1.0
  * @since 2018/8/27 22:14
  */
-public class SCompressor {
+public final class SCompressor {
 
     static final String TAG = SCompressor.class.getSimpleName();
     static final List<InputAdapter> INPUT_ADAPTERS = new ArrayList<>();
@@ -69,9 +70,10 @@ public class SCompressor {
     /**
      * Execute async task.
      */
-    static <InputType, OutputType> void asyncCall(Request<InputType, OutputType> request) {
-        Preconditions.checkNotNull(request.callback, "Please ensure Request.callback non null!");
-        CompressDispatcher.asyncDispatcher(request);
+    static <InputType, OutputType> void asyncCall(Request<InputType, OutputType> request,
+                                                  ICompressorCallback<OutputType> callback) {
+        Preconditions.checkNotNull(callback, "Please ensure Request.callback non null!");
+        AsyncCall.execute(request, callback);
     }
 
     /**
@@ -82,7 +84,13 @@ public class SCompressor {
     @Nullable
     static <InputType, OutputType> OutputType syncCall(Request<InputType, OutputType> request) {
         Preconditions.checkNotNull(request.inputSource, "Please ensure Request.inputSource non null!");
-        return CompressDispatcher.syncDispatcher(request);
+        OutputType output = null;
+        try {
+            output = SyncCall.execute(request);
+        } catch (Throwable throwable) {
+            // ignore.
+        }
+        return output;
     }
 
 }

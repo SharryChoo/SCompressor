@@ -64,11 +64,6 @@ public class Request<InputType, OutputType> {
      */
     final boolean isArithmeticCoding;
 
-    /**
-     * CompressCallback
-     */
-    final CompressCallback<OutputType> callback;
-
     private Request(
             DataSource<InputType> inputSource,
             DataSource<OutputType> outputSource,
@@ -76,8 +71,7 @@ public class Request<InputType, OutputType> {
             int destWidth,
             int destHeight,
             boolean isAutoDownsample,
-            boolean isArithmeticCoding,
-            CompressCallback<OutputType> callback) {
+            boolean isArithmeticCoding) {
         this.inputSource = inputSource;
         this.outputSource = outputSource;
         this.quality = quality;
@@ -85,7 +79,6 @@ public class Request<InputType, OutputType> {
         this.destHeight = destHeight;
         this.isAutoDownsample = isAutoDownsample;
         this.isArithmeticCoding = isArithmeticCoding;
-        this.callback = callback;
     }
 
     @Override
@@ -338,18 +331,18 @@ public class Request<InputType, OutputType> {
          *
          * @param lambdaCallback the lambda callback related on async task.
          */
-        public void asyncCall(@NonNull final CompressCallbackLambda<OutputType> lambdaCallback) {
+        public void asyncCall(@NonNull final ICompressorCallbackLambda<OutputType> lambdaCallback) {
             Preconditions.checkNotNull(lambdaCallback);
-            asyncCall(new CompressCallback<OutputType>() {
+            asyncCall(new ICompressorCallback<OutputType>() {
                 @Override
-                public void onCompressSuccess(@NonNull OutputType compressedData) {
-                    lambdaCallback.onCompressComplete(true, compressedData);
+                public void onSuccess(@NonNull OutputType compressedData) {
+                    lambdaCallback.onComplete(true, compressedData);
                 }
 
                 @Override
-                public void onCompressFailed(@NonNull Throwable e) {
+                public void onFailed(@NonNull Throwable e) {
                     Log.e(TAG, e.getMessage(), e);
-                    lambdaCallback.onCompressComplete(false, null);
+                    lambdaCallback.onComplete(false, null);
                 }
             });
         }
@@ -359,7 +352,7 @@ public class Request<InputType, OutputType> {
          *
          * @param callback the callback related on async task.
          */
-        public void asyncCall(@NonNull CompressCallback<OutputType> callback) {
+        public void asyncCall(@NonNull ICompressorCallback<OutputType> callback) {
             Preconditions.checkNotNull(callback);
             Preconditions.checkNotNull(inputSource);
             SCompressor.asyncCall(
@@ -370,9 +363,9 @@ public class Request<InputType, OutputType> {
                             desireWidth,
                             desireHeight,
                             isAutoDownSample,
-                            isArithmeticCoding,
-                            callback
-                    )
+                            isArithmeticCoding
+                    ),
+                    callback
             );
         }
 
@@ -390,8 +383,7 @@ public class Request<InputType, OutputType> {
                             desireWidth,
                             desireHeight,
                             isAutoDownSample,
-                            isArithmeticCoding,
-                            null
+                            isArithmeticCoding
                     )
             );
         }

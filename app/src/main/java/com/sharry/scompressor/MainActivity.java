@@ -98,11 +98,11 @@ public class MainActivity extends AppCompatActivity {
         performCompressBySCompressor(bitmap, destFile);
         bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
         mIvScompressorCompressed.setImageBitmap(bitmap);
-        // Skia 压缩
-        destFile = new File(dir, "Skia_" + System.currentTimeMillis() + ".jpg");
-        performCompressByAndroidSkia(bitmap, destFile);
-        bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
-        mIvSkiaCompressed.setImageBitmap(bitmap);
+//        // Skia 压缩
+//        destFile = new File(dir, "Skia_" + System.currentTimeMillis() + ".jpg");
+//        performCompressByAndroidSkia(bitmap, destFile);
+//        bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
+//        mIvSkiaCompressed.setImageBitmap(bitmap);
     }
 
     private void performCompressByAndroidSkia(Bitmap bitmap, File file) {
