@@ -140,7 +140,6 @@ final class Core {
         return new int[]{options.outWidth, options.outHeight};
     }
 
-
     ////////////////// native method /////////////////////
 
     static {

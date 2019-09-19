@@ -20,13 +20,13 @@ import java.util.List;
 public final class SCompressor {
 
     static final String TAG = SCompressor.class.getSimpleName();
-    static final List<InputAdapter> INPUT_ADAPTERS = new ArrayList<>();
+    static final List<InputWriter> INPUT_ADAPTERS = new ArrayList<>();
     static final List<OutputAdapter> OUTPUT_ADAPTERS = new ArrayList<>();
 
     static {
         // add default input adapters.
-        INPUT_ADAPTERS.add(new InputFilePathAdapter());
-        INPUT_ADAPTERS.add(new InputBitmapAdapter());
+        INPUT_ADAPTERS.add(new InputFilePathWriter());
+        INPUT_ADAPTERS.add(new InputBitmapWriter());
         // add default output adapters.
         OUTPUT_ADAPTERS.add(new OutputBitmapAdapter());
         OUTPUT_ADAPTERS.add(new OutputFilePathAdapter());
@@ -46,7 +46,7 @@ public final class SCompressor {
     /**
      * Add u custom input source adapter from here.
      */
-    public static void addInputAdapter(@NonNull InputAdapter adapter) {
+    public static void addInputAdapter(@NonNull InputWriter adapter) {
         Preconditions.checkNotNull(adapter);
         INPUT_ADAPTERS.add(adapter);
     }

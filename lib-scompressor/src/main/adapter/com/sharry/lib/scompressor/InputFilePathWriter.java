@@ -9,15 +9,15 @@ import androidx.annotation.NonNull;
  * @version 1.0
  * @since 2019-06-12 14:29
  */
-public class InputFilePathAdapter implements InputAdapter<String> {
+public class InputFilePathWriter implements InputWriter<String> {
 
     @Override
-    public String adapt(@NonNull Request request, @NonNull String inputData) {
-        return inputData;
+    public String writeToDisk(@NonNull DataSource<String> inputSource) throws Throwable {
+        return inputSource.getSource();
     }
 
     @Override
-    public boolean isAdapter(@NonNull Class adaptedType) {
+    public boolean isWriter(@NonNull Class adaptedType) {
         return adaptedType.getName().equals(String.class.getName());
     }
 

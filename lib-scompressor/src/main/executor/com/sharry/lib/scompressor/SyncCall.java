@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.io.File;
 
+import static com.sharry.lib.scompressor.Core.calculateSampleSize;
 import static com.sharry.lib.scompressor.Core.createUnsuspectedFile;
 import static com.sharry.lib.scompressor.Core.nativeCompress;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
@@ -20,28 +21,82 @@ final class SyncCall {
     private static final String UNSUSPECTED_FILE_PREFIX = "SCompressor_";
 
     static <InputType, OutputType> OutputType execute(Request<InputType, OutputType> request) throws Throwable {
-        // compress
+        // 1. validate.
         DataSource<InputType> inputSource = request.inputSource;
         DataSource<OutputType> outputSource = request.outputSource;
         if (inputSource.getSource() == null) {
             throw new NullPointerException();
         }
         Log.i(TAG, request.toString());
+        // 2. Down sample
+        Bitmap downsampledBitmap;
+        if (Bitmap.class.getSimpleName().equals(request.inputSource.getType().getName())) {
+            downsampledBitmap = handleBitmapInputType(request);
+        } else {
+            downsampledBitmap = handleOtherInputType(request);
+        }
+        // 3. Quality compress
+        File outputFile;
+        if (String.class.equals(outputSource.getType()) && outputSource.getSource() != null) {
+            outputFile = new File((String) outputSource.getSource());
+        } else {
+            outputFile = createUnsuspectedFile();
+        }
+        qualityCompress(request, downsampledBitmap, outputFile);
+        // 4. Adapter 2 target type.
+        Log.i(TAG, "Output file is: " + outputFile.getAbsolutePath());
+        Log.i(TAG, "Output file length is " + outputFile.length() / 1024 + "kb");
+        return findOutputAdapter(outputSource.getType()).adapt(outputFile);
+    }
+
+    private static <OutputType, InputType> Bitmap handleBitmapInputType(
+            Request<InputType, OutputType> request) throws Throwable {
+        Bitmap originBitmap = (Bitmap) request.inputSource.getSource();
+        if (originBitmap == null) {
+            throw new NullPointerException("Please ensure input source not null!");
+        }
+        if (originBitmap.getConfig() == Bitmap.Config.ARGB_8888 || originBitmap.getConfig() == Bitmap.Config.RGB_565) {
+            int sampleSize;
+            if (request.destWidth == Request.INVALIDATE || request.destHeight == Request.INVALIDATE) {
+                if (request.isAutoDownsample) {
+                    sampleSize = calculateSampleSize(originBitmap.getWidth(), originBitmap.getHeight());
+                } else {
+                    sampleSize = 1;
+                }
+            } else {
+                sampleSize = calculateSampleSize(originBitmap.getWidth(), originBitmap.getHeight(),
+                        request.destWidth, request.destHeight);
+            }
+            if (sampleSize == 1) {
+                Log.i(TAG, "Do not need down sample");
+                return originBitmap;
+            }
+            return Bitmap.createScaledBitmap(originBitmap, originBitmap.getWidth() / sampleSize,
+                    originBitmap.getHeight() / sampleSize, true);
+        } else {
+            return handleOtherInputType(request);
+        }
+    }
+
+    private static <OutputType, InputType> Bitmap handleOtherInputType(
+            Request<InputType, OutputType> request
+    ) throws Throwable {
         // 1. Adapter input data 2 input path.
-        String inputFilePath = findInputAdapter(inputSource.getType())
-                .adapt(request, inputSource.getSource());
+        String inputFilePath = findInputWriter(request.inputSource.getType())
+                .writeToDisk(request.inputSource);
         // 2. Do compress.
         // 2.1 Nearest Neighbour down sampling compress
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         if (request.destWidth == Request.INVALIDATE || request.destHeight == Request.INVALIDATE) {
             if (request.isAutoDownsample) {
-                options.inSampleSize = Core.calculateSampleSize(inputFilePath);
+                options.inSampleSize = calculateSampleSize(inputFilePath);
             } else {
-                Log.i(TAG, "Cannot support auto down sample");
+                Log.i(TAG, "Do not need down sample");
             }
         } else {
-            options.inSampleSize = Core.calculateSampleSize(inputFilePath, request.destWidth, request.destHeight);
+            options.inSampleSize = calculateSampleSize(inputFilePath,
+                    request.destWidth, request.destHeight);
         }
         Bitmap downsampledBitmap = BitmapFactory.decodeFile(inputFilePath, options);
         // 2.2 Try to rotate Bitmap
@@ -52,38 +107,21 @@ final class SyncCall {
             File tempFile = new File(inputFilePath);
             tempFile.delete();
         }
-        // 2.3 Quality compress
-        File outputFile;
-        if (String.class.equals(outputSource.getType()) && outputSource.getSource() != null) {
-            outputFile = new File((String) outputSource.getSource());
-        } else {
-            outputFile = createUnsuspectedFile();
-        }
-        int compressStatus = nativeCompress(downsampledBitmap, request.quality,
-                outputFile.getAbsolutePath(), request.isArithmeticCoding);
-        // Verify compress result.
-        if (compressStatus == 0) {
-            Log.e(TAG, "Compress failed.");
-            throw new RuntimeException("Native quality compress failed.");
-        }
-        // 3. Adapter 2 target type.
-        Log.i(TAG, "Output file is: " + outputFile.getAbsolutePath());
-        Log.i(TAG, "Output file length is " + outputFile.length() / 1024 + "kb");
-        return findOutputAdapter(outputSource.getType()).adapt(outputFile);
+        return downsampledBitmap;
     }
 
-    private static <Input> InputAdapter<Input> findInputAdapter(Class<Input> inputType) {
-        InputAdapter<Input> adapter = null;
-        for (InputAdapter inputAdapter : SCompressor.INPUT_ADAPTERS) {
-            if (inputAdapter.isAdapter(inputType)) {
-                adapter = inputAdapter;
+    private static <Input> InputWriter<Input> findInputWriter(Class<Input> inputType) {
+        InputWriter<Input> writer = null;
+        for (InputWriter inputWriter : SCompressor.INPUT_ADAPTERS) {
+            if (inputWriter.isWriter(inputType)) {
+                writer = inputWriter;
             }
         }
-        if (adapter == null) {
+        if (writer == null) {
             throw new UnsupportedOperationException("Cannot find an adapter that can convert "
                     + inputType.getName() + " to pre quality compressed bitmap");
         }
-        return adapter;
+        return writer;
     }
 
     private static <Target> OutputAdapter<Target> findOutputAdapter(Class<Target> targetType) {
@@ -98,6 +136,25 @@ final class SyncCall {
                     "compressed file path to" + targetType.getName());
         }
         return adapter;
+    }
+
+    private static <OutputType, InputType> void qualityCompress(Request<InputType, OutputType> request,
+                                                                Bitmap downsampledBitmap, File outputFile) {
+        int quality = request.quality;
+        do {
+            int compressStatus = nativeCompress(downsampledBitmap, quality,
+                    outputFile.getAbsolutePath(), request.isArithmeticCoding);
+            // Verify compress result.
+            if (compressStatus == 0) {
+                Log.e(TAG, "Compress failed.");
+                throw new RuntimeException("Native quality compress failed.");
+            }
+            quality -= 10;
+        } while (
+                request.desireOutputFileLength != Request.INVALIDATE &&
+                        outputFile.length() > request.desireOutputFileLength &&
+                        quality > 0
+        );
     }
 
 }

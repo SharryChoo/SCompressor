@@ -51,6 +51,13 @@ public class Request<InputType, OutputType> {
     final int destHeight;
 
     /**
+     * Set up desire file length after compressed.
+     * <p>
+     * Unit is byte.
+     */
+    final int desireOutputFileLength;
+
+    /**
      * Control auto down sample or not.
      * <p>
      * default is true.
@@ -70,6 +77,7 @@ public class Request<InputType, OutputType> {
             int quality,
             int destWidth,
             int destHeight,
+            int desireOutputFileLength,
             boolean isAutoDownsample,
             boolean isArithmeticCoding) {
         this.inputSource = inputSource;
@@ -77,6 +85,7 @@ public class Request<InputType, OutputType> {
         this.quality = quality;
         this.destWidth = destWidth;
         this.destHeight = destHeight;
+        this.desireOutputFileLength = desireOutputFileLength;
         this.isAutoDownsample = isAutoDownsample;
         this.isArithmeticCoding = isArithmeticCoding;
     }
@@ -123,6 +132,7 @@ public class Request<InputType, OutputType> {
         private int quality = DEFAULT_QUALITY;
         private int desireWidth = INVALIDATE;
         private int desireHeight = INVALIDATE;
+        private int desireOutputFileLength = INVALIDATE;
         private boolean isAutoDownSample = true;
         private boolean isArithmeticCoding = false;
 
@@ -134,6 +144,7 @@ public class Request<InputType, OutputType> {
                         int quality,
                         int desireWidth,
                         int desireHeight,
+                        int desireOutputFileLength,
                         boolean isAutoDownSample,
                         boolean isArithmeticCoding) {
             this.inputSource = inputSource;
@@ -141,6 +152,7 @@ public class Request<InputType, OutputType> {
             this.quality = quality;
             this.desireWidth = desireWidth;
             this.desireHeight = desireHeight;
+            this.desireOutputFileLength = desireOutputFileLength;
             this.isAutoDownSample = isAutoDownSample;
             this.isArithmeticCoding = isArithmeticCoding;
         }
@@ -203,6 +215,7 @@ public class Request<InputType, OutputType> {
                     quality,
                     desireWidth,
                     desireHeight,
+                    desireOutputFileLength,
                     isAutoDownSample,
                     isArithmeticCoding
             );
@@ -269,6 +282,16 @@ public class Request<InputType, OutputType> {
         }
 
         /**
+         * Set up desire file length after compressed.
+         * <p>
+         * Unit is byte.
+         */
+        public Builder<InputType, OutputType> setDesireLength(int desireOutputFileLength) {
+            this.desireOutputFileLength = desireOutputFileLength;
+            return this;
+        }
+
+        /**
          * Convert output type to Bitmap
          */
         public Builder<InputType, Bitmap> asBitmap() {
@@ -321,6 +344,7 @@ public class Request<InputType, OutputType> {
                     quality,
                     desireWidth,
                     desireHeight,
+                    desireOutputFileLength,
                     isAutoDownSample,
                     isArithmeticCoding
             );
@@ -362,6 +386,7 @@ public class Request<InputType, OutputType> {
                             quality,
                             desireWidth,
                             desireHeight,
+                            desireOutputFileLength,
                             isAutoDownSample,
                             isArithmeticCoding
                     ),
@@ -382,12 +407,12 @@ public class Request<InputType, OutputType> {
                             quality,
                             desireWidth,
                             desireHeight,
+                            desireOutputFileLength,
                             isAutoDownSample,
                             isArithmeticCoding
                     )
             );
         }
-
     }
 
 }

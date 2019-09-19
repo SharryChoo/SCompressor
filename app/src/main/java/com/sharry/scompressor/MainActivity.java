@@ -98,11 +98,29 @@ public class MainActivity extends AppCompatActivity {
         performCompressBySCompressor(bitmap, destFile);
         bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
         mIvScompressorCompressed.setImageBitmap(bitmap);
-//        // Skia 压缩
-//        destFile = new File(dir, "Skia_" + System.currentTimeMillis() + ".jpg");
-//        performCompressByAndroidSkia(bitmap, destFile);
-//        bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
-//        mIvSkiaCompressed.setImageBitmap(bitmap);
+        // Skia 压缩
+        destFile = new File(dir, "Skia_" + System.currentTimeMillis() + ".jpg");
+        performCompressByAndroidSkia(bitmap, destFile);
+        bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
+        mIvSkiaCompressed.setImageBitmap(bitmap);
+    }
+
+    private void performCompressBySCompressor(Bitmap bitmap, File file) {
+        long startTime = System.currentTimeMillis();
+        SCompressor.create()
+                .setAutoDownsample(true)
+                .setArithmeticCoding(true)
+                .setInputBitmap(bitmap)
+                .setOutputPath(file.getAbsolutePath())
+                .setDesireLength(1000 * 500)
+                .setQuality(50)
+                .syncCall();
+        long endTime = System.currentTimeMillis();
+        Log.e(
+                TAG,
+                "SCompressor compressed file length is " + (file.length() / 1024) + "kb, " +
+                        "cost time is " + (endTime - startTime) + "ms"
+        );
     }
 
     private void performCompressByAndroidSkia(Bitmap bitmap, File file) {
@@ -117,22 +135,6 @@ public class MainActivity extends AppCompatActivity {
         Log.e(
                 TAG,
                 "Skia compressed file length is " + (file.length() / 1024) + "kb, " +
-                        "cost time is " + (endTime - startTime) + "ms"
-        );
-    }
-
-    private void performCompressBySCompressor(Bitmap bitmap, File file) {
-        long startTime = System.currentTimeMillis();
-        SCompressor.create()
-                .setAutoDownsample(false)
-                .setInputBitmap(bitmap)
-                .setOutputPath(file.getAbsolutePath())
-                .setQuality(50)
-                .syncCall();
-        long endTime = System.currentTimeMillis();
-        Log.e(
-                TAG,
-                "SCompressor compressed file length is " + (file.length() / 1024) + "kb, " +
                         "cost time is " + (endTime - startTime) + "ms"
         );
     }
