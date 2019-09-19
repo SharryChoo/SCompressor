@@ -21,10 +21,10 @@ android {
         main {
             java.srcDirs += 'src/main/api'
             java.srcDirs += 'src/main/data'
-            java.srcDirs += 'src/main/call'
             java.srcDirs += 'src/main/adapter'
+            java.srcDirs += 'src/main/writer'
+            java.srcDirs += 'src/main/caller'
             java.srcDirs += 'src/main/utils'
-            java.srcDirs += 'src/main/executor'
         }
     }
     externalNativeBuild {

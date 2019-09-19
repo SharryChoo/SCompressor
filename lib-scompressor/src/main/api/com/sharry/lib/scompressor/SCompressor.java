@@ -73,7 +73,7 @@ public final class SCompressor {
     static <InputType, OutputType> void asyncCall(Request<InputType, OutputType> request,
                                                   ICompressorCallback<OutputType> callback) {
         Preconditions.checkNotNull(callback, "Please ensure Request.callback non null!");
-        AsyncCall.execute(request, callback);
+        AsyncCaller.execute(request, callback);
     }
 
     /**
@@ -86,7 +86,7 @@ public final class SCompressor {
         Preconditions.checkNotNull(request.inputSource, "Please ensure Request.inputSource non null!");
         OutputType output = null;
         try {
-            output = SyncCall.execute(request);
+            output = SyncCaller.execute(request);
         } catch (Throwable throwable) {
             // ignore.
         }

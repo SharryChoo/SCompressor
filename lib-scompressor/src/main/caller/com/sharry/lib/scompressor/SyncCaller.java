@@ -16,7 +16,7 @@ import static com.sharry.lib.scompressor.SCompressor.TAG;
  * @version 1.0
  * @since 2019-09-19 14:13
  */
-final class SyncCall {
+final class SyncCaller {
 
     private static final String UNSUSPECTED_FILE_PREFIX = "SCompressor_";
 
