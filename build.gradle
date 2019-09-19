@@ -6,9 +6,23 @@ buildscript {
         jcenter()
         
     }
+    ext {
+        // Sdk and tools
+        compileSdkVersion = 28
+        minSdkVersion = 19
+        targetSdkVersion = 28
+        buildToolsVersion = '28.0.2'
+        // Root project dependencies
+        gradleVersion = '3.2.1'
+        kotlinVersion = '1.3.31'
+        mavenVersion = '1.5'
+        // App dependencies
+        supportLibraryVersion = '1.0.0'
+        constraintLayout = '1.1.3'
+    }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.0'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath "com.android.tools.build:gradle:$gradleVersion"
+        classpath "com.github.dcendents:android-maven-gradle-plugin:$mavenVersion"
     }
 }
 
