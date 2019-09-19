@@ -28,7 +28,7 @@ public:
      */
     static int
     write_JPEG_file(JSAMPLE *image_buffer, int image_height, int image_width, char *filename,
-                    int quality);
+                    int quality, signed char b);
 
     /**
      * Read data from jpeg file, not used.

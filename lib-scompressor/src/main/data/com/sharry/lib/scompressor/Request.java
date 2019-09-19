@@ -1,11 +1,12 @@
 package com.sharry.lib.scompressor;
 
 import android.graphics.Bitmap;
+import android.util.Log;
+
 import androidx.annotation.Dimension;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Log;
 
 import static androidx.annotation.Dimension.PX;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
@@ -38,13 +39,6 @@ public class Request<InputType, OutputType> {
     final int quality;
 
     /**
-     * Control auto down sample or not.
-     * <p>
-     * default is true.
-     */
-    final boolean isSupportDownSample;
-
-    /**
      * Compress out desire width.
      */
     @Dimension(unit = PX)
@@ -57,6 +51,20 @@ public class Request<InputType, OutputType> {
     final int destHeight;
 
     /**
+     * Control auto down sample or not.
+     * <p>
+     * default is true.
+     */
+    final boolean isAutoDownsample;
+
+    /**
+     * Control open arithmetic coding or not.
+     * <p>
+     * if true will use arithmetic coding, false use Huffman.
+     */
+    final boolean isArithmeticCoding;
+
+    /**
      * CompressCallback
      */
     final CompressCallback<OutputType> callback;
@@ -65,16 +73,18 @@ public class Request<InputType, OutputType> {
             DataSource<InputType> inputSource,
             DataSource<OutputType> outputSource,
             int quality,
-            boolean isSupportDownSample,
             int destWidth,
             int destHeight,
+            boolean isAutoDownsample,
+            boolean isArithmeticCoding,
             CompressCallback<OutputType> callback) {
         this.inputSource = inputSource;
         this.outputSource = outputSource;
         this.quality = quality;
-        this.isSupportDownSample = isSupportDownSample;
         this.destWidth = destWidth;
         this.destHeight = destHeight;
+        this.isAutoDownsample = isAutoDownsample;
+        this.isArithmeticCoding = isArithmeticCoding;
         this.callback = callback;
     }
 
@@ -84,7 +94,7 @@ public class Request<InputType, OutputType> {
                 "inputSource = " + inputSource.getType().getSimpleName() +
                 ", outputSource = " + outputSource.getType().getSimpleName() +
                 ", quality = " + quality +
-                ", isAutoDownSample = " + isSupportDownSample +
+                ", isAutoDownsample = " + isAutoDownsample +
                 ", destWidth = " + destWidth +
                 ", destHeight = " + destHeight +
                 '}';
@@ -118,9 +128,10 @@ public class Request<InputType, OutputType> {
         private DataSource inputSource;
         private DataSource outputSource = DEFAULT_OUTPUT_DATA_SOURCE;
         private int quality = DEFAULT_QUALITY;
-        private boolean isAutoDownSample = true;
         private int desireWidth = INVALIDATE;
         private int desireHeight = INVALIDATE;
+        private boolean isAutoDownSample = true;
+        private boolean isArithmeticCoding = false;
 
         Builder() {
         }
@@ -128,15 +139,17 @@ public class Request<InputType, OutputType> {
         private Builder(DataSource inputSource,
                         DataSource outputSource,
                         int quality,
-                        boolean isAutoDownSample,
                         int desireWidth,
-                        int desireHeight) {
+                        int desireHeight,
+                        boolean isAutoDownSample,
+                        boolean isArithmeticCoding) {
             this.inputSource = inputSource;
             this.outputSource = outputSource;
             this.quality = quality;
-            this.isAutoDownSample = isAutoDownSample;
             this.desireWidth = desireWidth;
             this.desireHeight = desireHeight;
+            this.isAutoDownSample = isAutoDownSample;
+            this.isArithmeticCoding = isArithmeticCoding;
         }
 
         /**
@@ -195,9 +208,10 @@ public class Request<InputType, OutputType> {
                     inputSource,
                     outputSource,
                     quality,
-                    isAutoDownSample,
                     desireWidth,
-                    desireHeight
+                    desireHeight,
+                    isAutoDownSample,
+                    isArithmeticCoding
             );
         }
 
@@ -208,14 +222,6 @@ public class Request<InputType, OutputType> {
          */
         public Builder<InputType, OutputType> setQuality(@IntRange(from = 0, to = 100) int quality) {
             this.quality = Preconditions.checkRange(quality, 0, 100);
-            return this;
-        }
-
-        /**
-         * Set up support auto down sample or not.
-         */
-        public Builder<InputType, OutputType> setAutoDownSample(boolean autoDownSample) {
-            isAutoDownSample = autoDownSample;
             return this;
         }
 
@@ -251,6 +257,22 @@ public class Request<InputType, OutputType> {
                 }
 
             });
+        }
+
+        /**
+         * Set up support auto down sample or not.
+         */
+        public Builder<InputType, OutputType> setAutoDownsample(boolean autoDownSample) {
+            isAutoDownSample = autoDownSample;
+            return this;
+        }
+
+        /**
+         * Set up support arithmetic coding or not.
+         */
+        public Builder<InputType, OutputType> setArithmeticCoding(boolean isArithmeticCoding) {
+            this.isArithmeticCoding = isArithmeticCoding;
+            return this;
         }
 
         /**
@@ -304,9 +326,10 @@ public class Request<InputType, OutputType> {
                     inputSource,
                     outputSource,
                     quality,
-                    isAutoDownSample,
                     desireWidth,
-                    desireHeight
+                    desireHeight,
+                    isAutoDownSample,
+                    isArithmeticCoding
             );
         }
 
@@ -344,9 +367,10 @@ public class Request<InputType, OutputType> {
                             inputSource,
                             outputSource,
                             quality,
-                            isAutoDownSample,
                             desireWidth,
                             desireHeight,
+                            isAutoDownSample,
+                            isArithmeticCoding,
                             callback
                     )
             );
@@ -363,9 +387,10 @@ public class Request<InputType, OutputType> {
                             inputSource,
                             outputSource,
                             quality,
-                            isAutoDownSample,
                             desireWidth,
                             desireHeight,
+                            isAutoDownSample,
+                            isArithmeticCoding,
                             null
                     )
             );

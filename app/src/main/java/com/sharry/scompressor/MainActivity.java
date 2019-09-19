@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
     private void performCompressBySCompressor(Bitmap bitmap, File file) {
         long startTime = System.currentTimeMillis();
         SCompressor.create()
-                .setAutoDownSample(false)
+                .setAutoDownsample(false)
                 .setInputBitmap(bitmap)
                 .setOutputPath(file.getAbsolutePath())
                 .setQuality(50)

@@ -40,7 +40,7 @@ final class Core {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
         if (request.destWidth == Request.INVALIDATE || request.destHeight == Request.INVALIDATE) {
-            if (request.isSupportDownSample) {
+            if (request.isAutoDownsample) {
                 options.inSampleSize = Core.calculateSampleSize(inputFilePath);
             } else {
                 Log.i(TAG, "Cannot support auto down sample");
@@ -48,9 +48,9 @@ final class Core {
         } else {
             options.inSampleSize = Core.calculateSampleSize(inputFilePath, request.destWidth, request.destHeight);
         }
-        Bitmap downSampleBitmap = BitmapFactory.decodeFile(inputFilePath, options);
+        Bitmap downsampledBitmap = BitmapFactory.decodeFile(inputFilePath, options);
         // 2.2 Try to rotate Bitmap
-        downSampleBitmap = Core.rotateBitmap(downSampleBitmap,
+        downsampledBitmap = Core.rotateBitmap(downsampledBitmap,
                 Core.readImageRotateAngle(inputFilePath));
         // If the file is unsuspected file, then delete it.
         if (inputFilePath.startsWith(UNSUSPECTED_FILE_PREFIX)) {
@@ -64,7 +64,8 @@ final class Core {
         } else {
             outputFile = createUnsuspectedFile();
         }
-        int compressStatus = nativeCompress(downSampleBitmap, request.quality, outputFile.getAbsolutePath());
+        int compressStatus = nativeCompress(downsampledBitmap, request.quality,
+                outputFile.getAbsolutePath(), request.isArithmeticCoding);
         // Verify compress result.
         if (compressStatus == 0) {
             Log.e(TAG, "Compress failed.");
@@ -226,6 +227,6 @@ final class Core {
         System.loadLibrary("scompressor");
     }
 
-    static native int nativeCompress(Bitmap bitmap, int quality, String destPath);
+    static native int nativeCompress(Bitmap bitmap, int quality, String destPath, boolean isArithmeticCoding);
 
 }
