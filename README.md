@@ -172,20 +172,21 @@ Bitmap bitmap = SCompressor.create()
 ```
 
 ### Other 
-If u use custom input or output source, U need implement Adapter and add it.
-#### InputAdapter
+If u use custom input or output source, U need implement Writer or Adapter and add it.
+
+#### InputWriter
 ```
 // Define Input Adapter
-InputAdapter<Object> myInputAdapter = new InputAdapter<Object>() {
+InputWriter<Object> myInputAdapter = new InputWriter<Object>() {
      @Override
-     public String adapt(@NonNull Request request, @NonNull Object inputData) throws Throwable {
+     String writeToDisk(@NonNull DataSource<InputType> inputSource) throws Throwable {
          // Request: u can fetch everything from request.
-         // inputData: u need adapt this data 2 input file.
+         // inputData: u need write this image data 2 disk.
          return null;
      }
 
      @Override
-     public boolean isAdapter(@NonNull Class adaptedType) {
+     public boolean isWriter(@NonNull Class adaptedType) {
           // Ensure this Adapter field.
           return Object.class.getName().equals(adaptedType.getName());
      }

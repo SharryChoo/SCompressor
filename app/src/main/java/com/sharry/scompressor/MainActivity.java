@@ -25,6 +25,7 @@ import com.sharry.lib.scompressor.SCompressor;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -126,10 +127,20 @@ public class MainActivity extends AppCompatActivity {
     private void performCompressByAndroidSkia(Bitmap bitmap, File file) {
         long startTime = System.currentTimeMillis();
         // Android system.
+        FileOutputStream fos = null;
         try {
+            fos = new FileOutputStream(file);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 50, new FileOutputStream(file));
         } catch (FileNotFoundException e) {
             // ignore.
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    // ignore.
+                }
+            }
         }
         long endTime = System.currentTimeMillis();
         Log.e(
