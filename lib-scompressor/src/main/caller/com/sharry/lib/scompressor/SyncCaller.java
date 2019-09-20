@@ -14,7 +14,7 @@ import static com.sharry.lib.scompressor.Core.nativeCompress;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
 
 /**
- * @author Sharry <a href="xiaoyu.zhu@1hai.cn">Contact me.</a>
+ * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
  * @version 1.0
  * @since 2019-09-19 14:13
  */

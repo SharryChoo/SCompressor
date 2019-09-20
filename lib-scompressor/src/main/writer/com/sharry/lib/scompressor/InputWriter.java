@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
  * <p>
  * write input data 2 disk.
  *
- * @author Sharry <a href="xiaoyu.zhu@1hai.cn">Contact me.</a>
+ * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
  * @version 1.0
  * @since 2019-06-12 14:20
  */

@@ -28,6 +28,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/**
+ * 测试页
+ *
+ * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
+ * @version 1.0
+ * @since 2019-09-20 13:37
+ */
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
