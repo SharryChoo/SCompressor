@@ -54,11 +54,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 PickerManager.with(v.getContext())
-                        .setPickerConfig(
-                                PickerConfig.Builder()
-                                        .setThreshold(1)
-                                        .build()
-                        )
+                        .setPickerConfig(PickerConfig.Builder().setThreshold(1).build())
                         .setLoaderEngine(new ILoaderEngine() {
                             @Override
                             public void loadPicture(@NonNull Context context, @NonNull String s, @NonNull ImageView imageView) {
@@ -109,12 +105,19 @@ public class MainActivity extends AppCompatActivity {
     private void performCompressBySCompressor(Bitmap bitmap, File file) {
         long startTime = System.currentTimeMillis();
         SCompressor.create()
-                .setAutoDownsample(false)
+                // 使用自动降采样
+                .setAutoDownsample(true)
+                // 使用算术编码
                 .setArithmeticCoding(false)
+                // 输入源
                 .setInputBitmap(bitmap)
+                // 输出路径
                 .setOutputPath(file.getAbsolutePath())
+                // 压缩后的期望大小
                 .setDesireLength(1000 * 500)
+                // 压缩质量
                 .setQuality(50)
+                // 同步调用
                 .syncCall();
         long endTime = System.currentTimeMillis();
         Log.e(

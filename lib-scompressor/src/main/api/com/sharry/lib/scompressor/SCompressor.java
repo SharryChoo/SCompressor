@@ -33,14 +33,14 @@ public final class SCompressor {
         OUTPUT_ADAPTERS.add(new OutputByteArrayAdapter());
     }
 
-    static File usableDir;
+    static File sUsableDir;
 
     /**
      * Init usable Dir, helper generate temp file.
      */
     public static void init(@NonNull Context context) {
         Preconditions.checkNotNull(context, "Please ensure context non null!");
-        usableDir = context.getCacheDir();
+        sUsableDir = context.getCacheDir();
     }
 
     /**

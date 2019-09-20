@@ -4,12 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
-import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
-
-import static com.sharry.lib.scompressor.SCompressor.TAG;
 
 /**
  * The core algorithm associated with picture compress.
@@ -26,7 +23,7 @@ final class Core {
 
     static File createUnsuspectedFile() throws IOException {
         File tempFile = new File(
-                Preconditions.checkNotNull(SCompressor.usableDir, "If U not set output path, " +
+                Preconditions.checkNotNull(SCompressor.sUsableDir, "If U not set output path, " +
                         "Please invoke SCompressor.init config an usable directory."),
                 UNSUSPECTED_FILE_PREFIX + System.currentTimeMillis() + SUFFIX_JPEG
         );

@@ -275,6 +275,8 @@ public class Request<InputType, OutputType> {
 
         /**
          * Set up support arithmetic coding or not.
+         * <p>
+         * Arithmetic coding will get performance compression ratio, but have some compatibility questions.
          */
         public Builder<InputType, OutputType> setArithmeticCoding(boolean isArithmeticCoding) {
             this.isArithmeticCoding = isArithmeticCoding;
