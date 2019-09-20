@@ -109,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
     private void performCompressBySCompressor(Bitmap bitmap, File file) {
         long startTime = System.currentTimeMillis();
         SCompressor.create()
-                .setAutoDownsample(true)
-                .setArithmeticCoding(true)
+                .setAutoDownsample(false)
+                .setArithmeticCoding(false)
                 .setInputBitmap(bitmap)
                 .setOutputPath(file.getAbsolutePath())
                 .setDesireLength(1000 * 500)
@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, new FileOutputStream(file));
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, fos);
         } catch (FileNotFoundException e) {
             // ignore.
         } finally {

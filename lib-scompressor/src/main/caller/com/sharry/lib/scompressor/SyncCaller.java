@@ -2,9 +2,11 @@ package com.sharry.lib.scompressor;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
 import static com.sharry.lib.scompressor.Core.calculateSampleSize;
 import static com.sharry.lib.scompressor.Core.createUnsuspectedFile;
@@ -139,7 +141,34 @@ final class SyncCaller {
     }
 
     private static <OutputType, InputType> void qualityCompress(Request<InputType, OutputType> request,
-                                                                Bitmap downsampledBitmap, File outputFile) {
+                                                                Bitmap downsampledBitmap, File outputFile) throws Throwable {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !request.isArithmeticCoding) {
+            skiaCompress(request, downsampledBitmap, outputFile);
+        } else {
+            libjpegTurboCompress(request, downsampledBitmap, outputFile);
+        }
+    }
+
+    private static <OutputType, InputType> void skiaCompress(Request<InputType, OutputType> request,
+                                                             Bitmap downsampledBitmap,
+                                                             File outputFile) throws Throwable {
+        // 1. First compress.
+        int quality = request.quality;
+        do {
+            FileOutputStream fos = new FileOutputStream(outputFile);
+            downsampledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, fos);
+            fos.flush();
+            fos.close();
+            quality -= 10;
+        } while (
+                request.desireOutputFileLength != Request.INVALIDATE &&
+                        outputFile.length() > request.desireOutputFileLength &&
+                        quality > 0
+        );
+    }
+
+    private static <OutputType, InputType> void libjpegTurboCompress(Request<InputType, OutputType> request,
+                                                                     Bitmap downsampledBitmap, File outputFile) {
         int quality = request.quality;
         do {
             int compressStatus = nativeCompress(downsampledBitmap, quality,
