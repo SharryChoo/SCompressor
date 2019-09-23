@@ -23,9 +23,6 @@ import com.sharry.lib.album.PickerManager;
 import com.sharry.lib.scompressor.SCompressor;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -40,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private Button mBtnPicker;
-    private ImageView mIvSkiaCompressed;
     private ImageView mIvScompressorCompressed;
 
     @Override
@@ -54,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViews() {
         mBtnPicker = findViewById(R.id.btn_picker);
-        mIvSkiaCompressed = findViewById(R.id.iv_skia_compressed);
         mIvScompressorCompressed = findViewById(R.id.iv_scompressor_compressed);
         mBtnPicker = findViewById(R.id.btn_picker);
         mBtnPicker.setOnClickListener(new View.OnClickListener() {
@@ -102,11 +97,6 @@ public class MainActivity extends AppCompatActivity {
         performCompressBySCompressor(bitmap, destFile);
         bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
         mIvScompressorCompressed.setImageBitmap(bitmap);
-        // Skia 压缩
-        destFile = new File(dir, "Skia_" + System.currentTimeMillis() + ".jpg");
-        performCompressByAndroidSkia(bitmap, destFile);
-        bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
-        mIvSkiaCompressed.setImageBitmap(bitmap);
     }
 
     private void performCompressBySCompressor(Bitmap bitmap, File file) {
@@ -130,32 +120,6 @@ public class MainActivity extends AppCompatActivity {
         Log.e(
                 TAG,
                 "SCompressor compressed file length is " + (file.length() / 1024) + "kb, " +
-                        "cost time is " + (endTime - startTime) + "ms"
-        );
-    }
-
-    private void performCompressByAndroidSkia(Bitmap bitmap, File file) {
-        long startTime = System.currentTimeMillis();
-        // Android system.
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, fos);
-        } catch (FileNotFoundException e) {
-            // ignore.
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    // ignore.
-                }
-            }
-        }
-        long endTime = System.currentTimeMillis();
-        Log.e(
-                TAG,
-                "Skia compressed file length is " + (file.length() / 1024) + "kb, " +
                         "cost time is " + (endTime - startTime) + "ms"
         );
     }
