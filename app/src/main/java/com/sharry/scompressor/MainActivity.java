@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private Button mBtnPicker;
-    private ImageView mIvScompressorCompressed;
+    private ImageView mIvCompressed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,12 +45,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         SCompressor.init(this);
         initViews();
-
     }
 
     private void initViews() {
         mBtnPicker = findViewById(R.id.btn_picker);
-        mIvScompressorCompressed = findViewById(R.id.iv_scompressor_compressed);
+        mIvCompressed = findViewById(R.id.iv_compressed);
         mBtnPicker = findViewById(R.id.btn_picker);
         mBtnPicker.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         );
         // 展示压缩后的效果
         Bitmap bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
-        mIvScompressorCompressed.setImageBitmap(bitmap);
+        mIvCompressed.setImageBitmap(bitmap);
     }
 
 }
