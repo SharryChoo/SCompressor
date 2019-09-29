@@ -9,8 +9,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 import static com.sharry.lib.scompressor.Core.calculateSampleSize;
-import static com.sharry.lib.scompressor.Core.createUnsuspectedFile;
 import static com.sharry.lib.scompressor.Core.nativeCompress;
+import static com.sharry.lib.scompressor.FileUtil.createFile;
+import static com.sharry.lib.scompressor.FileUtil.createUnsuspectedFile;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
 
 /**
@@ -40,7 +41,7 @@ final class SyncCaller {
         // 3. Quality compress
         File outputFile;
         if (String.class.equals(outputSource.getType()) && outputSource.getSource() != null) {
-            outputFile = new File((String) outputSource.getSource());
+            outputFile = createFile((String) outputSource.getSource());
         } else {
             outputFile = createUnsuspectedFile();
         }
@@ -114,7 +115,7 @@ final class SyncCaller {
 
     private static <Input> InputWriter<Input> findInputWriter(Class<Input> inputType) {
         InputWriter<Input> writer = null;
-        for (InputWriter inputWriter : SCompressor.INPUT_ADAPTERS) {
+        for (InputWriter inputWriter : SCompressor.INPUT_WRITERS) {
             if (inputWriter.isWriter(inputType)) {
                 writer = inputWriter;
             }

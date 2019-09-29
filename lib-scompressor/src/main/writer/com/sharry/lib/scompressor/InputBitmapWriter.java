@@ -19,7 +19,7 @@ public class InputBitmapWriter implements InputWriter<Bitmap> {
     @Override
     public String writeToDisk(@NonNull DataSource<Bitmap> inputSource) throws Throwable {
         // write bitmap 2 temp file.
-        File tempFile = Core.createUnsuspectedFile();
+        File tempFile = FileUtil.createUnsuspectedFile();
         FileOutputStream fos = new FileOutputStream(tempFile);
         Bitmap bitmap = inputSource.getSource();
         if (bitmap != null) {

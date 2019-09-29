@@ -17,22 +17,7 @@ import java.io.IOException;
  */
 final class Core {
 
-    private static final String SUFFIX_JPEG = ".jpg";
-    private static final String UNSUSPECTED_FILE_PREFIX = "SCompressor_";
     private static final int INVALIDATE = -1;
-
-    static File createUnsuspectedFile() throws IOException {
-        File tempFile = new File(
-                Preconditions.checkNotNull(SCompressor.sUsableDir, "If U not set output path, " +
-                        "Please invoke SCompressor.init config an usable directory."),
-                UNSUSPECTED_FILE_PREFIX + System.currentTimeMillis() + SUFFIX_JPEG
-        );
-        if (tempFile.exists()) {
-            tempFile.delete();
-        }
-        tempFile.createNewFile();
-        return tempFile;
-    }
 
     static int calculateSampleSize(String filePath) {
         return calculateSampleSize(filePath, INVALIDATE, INVALIDATE);

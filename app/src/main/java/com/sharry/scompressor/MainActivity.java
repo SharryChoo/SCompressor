@@ -86,30 +86,19 @@ public class MainActivity extends AppCompatActivity {
     private final String usableDir = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "SCompressor";
 
     private void doCompress(MediaMeta mediaMeta) {
-        File dir = new File(usableDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
         Log.e(TAG, "Origin file length is " + new File(mediaMeta.getPath()).length() / 1024 + "kb");
-        Bitmap bitmap = BitmapFactory.decodeFile(mediaMeta.getPath());
-        // SCompressor 压缩
-        File destFile = new File(dir, "SCompressor_" + System.currentTimeMillis() + ".jpg");
-        performCompressBySCompressor(bitmap, destFile);
-        bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
-        mIvScompressorCompressed.setImageBitmap(bitmap);
-    }
-
-    private void performCompressBySCompressor(Bitmap bitmap, File file) {
+        File destFile = new File(usableDir, "SCompressor_" + System.currentTimeMillis() + ".jpg");
         long startTime = System.currentTimeMillis();
+        // SCompressor 压缩
         SCompressor.create()
                 // 使用自动降采样
                 .setAutoDownsample(true)
                 // 使用算术编码
                 .setArithmeticCoding(false)
                 // 输入源
-                .setInputBitmap(bitmap)
+                .setInputPath(mediaMeta.getPath())
                 // 输出路径
-                .setOutputPath(file.getAbsolutePath())
+                .setOutputPath(destFile.getAbsolutePath())
                 // 压缩后的期望大小
                 .setDesireLength(1000 * 500)
                 // 压缩质量
@@ -119,9 +108,12 @@ public class MainActivity extends AppCompatActivity {
         long endTime = System.currentTimeMillis();
         Log.e(
                 TAG,
-                "SCompressor compressed file length is " + (file.length() / 1024) + "kb, " +
+                "SCompressor compressed file length is " + (destFile.length() / 1024) + "kb, " +
                         "cost time is " + (endTime - startTime) + "ms"
         );
+        // 展示压缩后的效果
+        Bitmap bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
+        mIvScompressorCompressed.setImageBitmap(bitmap);
     }
 
 }
