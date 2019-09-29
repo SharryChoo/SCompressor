@@ -2,17 +2,20 @@ package com.sharry.lib.scompressor;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
 import static com.sharry.lib.scompressor.Core.calculateSampleSize;
-import static com.sharry.lib.scompressor.Core.createUnsuspectedFile;
 import static com.sharry.lib.scompressor.Core.nativeCompress;
+import static com.sharry.lib.scompressor.FileUtil.createFile;
+import static com.sharry.lib.scompressor.FileUtil.createUnsuspectedFile;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
 
 /**
- * @author Sharry <a href="xiaoyu.zhu@1hai.cn">Contact me.</a>
+ * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
  * @version 1.0
  * @since 2019-09-19 14:13
  */
@@ -38,7 +41,7 @@ final class SyncCaller {
         // 3. Quality compress
         File outputFile;
         if (String.class.equals(outputSource.getType()) && outputSource.getSource() != null) {
-            outputFile = new File((String) outputSource.getSource());
+            outputFile = createFile((String) outputSource.getSource());
         } else {
             outputFile = createUnsuspectedFile();
         }
@@ -112,7 +115,7 @@ final class SyncCaller {
 
     private static <Input> InputWriter<Input> findInputWriter(Class<Input> inputType) {
         InputWriter<Input> writer = null;
-        for (InputWriter inputWriter : SCompressor.INPUT_ADAPTERS) {
+        for (InputWriter inputWriter : SCompressor.INPUT_WRITERS) {
             if (inputWriter.isWriter(inputType)) {
                 writer = inputWriter;
             }
@@ -139,7 +142,34 @@ final class SyncCaller {
     }
 
     private static <OutputType, InputType> void qualityCompress(Request<InputType, OutputType> request,
-                                                                Bitmap downsampledBitmap, File outputFile) {
+                                                                Bitmap downsampledBitmap, File outputFile) throws Throwable {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !request.isArithmeticCoding) {
+            skiaCompress(request, downsampledBitmap, outputFile);
+        } else {
+            libjpegTurboCompress(request, downsampledBitmap, outputFile);
+        }
+    }
+
+    private static <OutputType, InputType> void skiaCompress(Request<InputType, OutputType> request,
+                                                             Bitmap downsampledBitmap,
+                                                             File outputFile) throws Throwable {
+        // 1. First compress.
+        int quality = request.quality;
+        do {
+            FileOutputStream fos = new FileOutputStream(outputFile);
+            downsampledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, fos);
+            fos.flush();
+            fos.close();
+            quality -= 10;
+        } while (
+                request.desireOutputFileLength != Request.INVALIDATE &&
+                        outputFile.length() > request.desireOutputFileLength &&
+                        quality > 0
+        );
+    }
+
+    private static <OutputType, InputType> void libjpegTurboCompress(Request<InputType, OutputType> request,
+                                                                     Bitmap downsampledBitmap, File outputFile) {
         int quality = request.quality;
         do {
             int compressStatus = nativeCompress(downsampledBitmap, quality,

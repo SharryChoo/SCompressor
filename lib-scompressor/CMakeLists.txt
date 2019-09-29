@@ -1,6 +1,12 @@
 # Sets the minimum version of CMake required to build the native library.
 CMAKE_MINIMUM_REQUIRED(VERSION 3.4.1)
 
+# Ollvm 代码混淆, 增添 100 ms 左右的执行时间
+#SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -mllvm -fla")
+#SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mllvm -fla")
+#SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mllvm -fla")
+#SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mllvm -fla")
+
 # 链接头文件
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/main/jniLibs/include)
 
