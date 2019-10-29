@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.File;
-import java.io.FileDescriptor;
 
 import static androidx.annotation.Dimension.PX;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
@@ -150,75 +149,29 @@ public class Request<InputType, OutputType> {
         }
 
         /**
-         * Set source image file path associated with this compress task.
-         */
-        public Builder<String, OutputType> setInputPath(@NonNull final String srcPath) {
-            Preconditions.checkNotNull(srcPath);
-            return setInputSource(new InputSource<String>() {
-                @NonNull
-                @Override
-                public Class<String> getType() {
-                    return String.class;
-                }
-
-                @NonNull
-                @Override
-                public String getSource() {
-                    return srcPath;
-                }
-            });
-        }
-
-        /**
-         * Set source image bitmap associated with this compress task.
-         */
-        public Builder<Bitmap, OutputType> setInputBitmap(@NonNull final Bitmap srcBitmap) {
-            Preconditions.checkNotNull(srcBitmap);
-            return setInputSource(new InputSource<Bitmap>() {
-                @NonNull
-                @Override
-                public Class<Bitmap> getType() {
-                    return Bitmap.class;
-                }
-
-                @NonNull
-                @Override
-                public Bitmap getSource() {
-                    return srcBitmap;
-                }
-            });
-        }
-
-        /**
-         * Set source image fd associated with this compress task
-         */
-        public Builder<FileDescriptor, OutputType> setInputFileDescriptor(@NonNull final FileDescriptor fd) {
-            Preconditions.checkNotNull(fd);
-            return setInputSource(new InputSource<FileDescriptor>() {
-                @NonNull
-                @Override
-                public Class<FileDescriptor> getType() {
-                    return FileDescriptor.class;
-                }
-
-                @NonNull
-                @Override
-                public FileDescriptor getSource() {
-                    return fd;
-                }
-            });
-        }
-
-        /**
          * Set u custom input source.
          *
-         * @param inputSource desc input source.
+         * @param inputSource desc input source. Current support
+         *                    Origin Bitmap {@link Bitmap},
+         *                    File Path {@link String},
+         *                    File Uri {@link Uri}
          */
-        public <NewInputType> Builder<NewInputType, OutputType> setInputSource(
-                @NonNull InputSource<NewInputType> inputSource) {
-            this.inputSource = inputSource;
+        public <NewInputType> Builder<NewInputType, OutputType> setInputSource(final NewInputType inputSource) {
+            this.inputSource = new InputSource() {
+                @NonNull
+                @Override
+                public Class getType() {
+                    return inputSource.getClass();
+                }
+
+                @Nullable
+                @Override
+                public Object getSource() {
+                    return inputSource;
+                }
+            };
             return new Builder<>(
-                    inputSource,
+                    this.inputSource,
                     outputType,
                     quality,
                     desireWidth,

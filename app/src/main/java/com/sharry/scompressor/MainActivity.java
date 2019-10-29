@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -23,9 +22,6 @@ import com.sharry.lib.album.PickerManager;
 import com.sharry.lib.scompressor.SCompressor;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -40,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = SCompressor.class.getSimpleName();
 
     private Button mBtnPicker;
-    private ImageView mIvSkiaCompressed;
     private ImageView mIvScompressorCompressed;
 
     @Override
@@ -54,8 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViews() {
         mBtnPicker = findViewById(R.id.btn_picker);
-        mIvSkiaCompressed = findViewById(R.id.iv_skia_compressed);
-        mIvScompressorCompressed = findViewById(R.id.iv_scompressor_compressed);
+        mIvScompressorCompressed = findViewById(R.id.iv_compressed);
         mBtnPicker = findViewById(R.id.btn_picker);
         mBtnPicker.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,33 +84,29 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void doCompress(MediaMeta mediaMeta) {
-        File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         Log.e(TAG, "Origin file length is " + new File(mediaMeta.getPath()).length() / 1024 + "kb");
         Bitmap bitmap = BitmapFactory.decodeFile(mediaMeta.getPath());
         // SCompressor 压缩
-        File destFile = performCompressBySCompressor(mediaMeta.getPath());
+        File destFile = performCompressBySCompressor(bitmap);
         bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
         mIvScompressorCompressed.setImageBitmap(bitmap);
-        // Skia 压缩
-        destFile = new File(dir, "Skia_" + System.currentTimeMillis() + ".jpg");
-        performCompressByAndroidSkia(bitmap, destFile);
-        bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
-        mIvSkiaCompressed.setImageBitmap(bitmap);
     }
 
-    private File performCompressBySCompressor(String bitmap) {
+    private File performCompressBySCompressor(Bitmap bitmap) {
         long startTime = System.currentTimeMillis();
         File file = SCompressor.create()
                 // 使用自动降采样
                 .setAutoDownsample(false)
                 // 使用算术编码
-                .setArithmeticCoding(true)
+                .setArithmeticCoding(false)
                 // 输入源
-                .setInputPath(bitmap)
+                .setInputSource(bitmap)
                 // 压缩后的期望大小
                 .setDesireLength(1000 * 500)
                 // 压缩质量
                 .setQuality(50)
+                // 转为目标类型
+                .asFile()
                 // 同步调用
                 .syncCall();
         long endTime = System.currentTimeMillis();
@@ -126,32 +116,6 @@ public class MainActivity extends AppCompatActivity {
                         "cost time is " + (endTime - startTime) + "ms"
         );
         return file;
-    }
-
-    private void performCompressByAndroidSkia(Bitmap bitmap, File file) {
-        long startTime = System.currentTimeMillis();
-        // Android system.
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, fos);
-        } catch (FileNotFoundException e) {
-            // ignore.
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    // ignore.
-                }
-            }
-        }
-        long endTime = System.currentTimeMillis();
-        Log.e(
-                TAG,
-                "Skia compressed file length is " + (file.length() / 1024) + "kb, " +
-                        "cost time is " + (endTime - startTime) + "ms"
-        );
     }
 
 }
