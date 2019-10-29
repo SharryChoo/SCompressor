@@ -14,7 +14,7 @@ import java.io.FileDescriptor;
  * @version 1.0
  * @since 2019-06-12 14:29
  */
-public class InputUriAdapter implements FileDescriptorAdapter<Uri> {
+public class InputUriAdapter implements InputAdapter<Uri> {
 
     @Override
     public FileDescriptor adapt(Context context, String authority, @NonNull InputSource<Uri> inputSource) throws Throwable {
@@ -23,8 +23,8 @@ public class InputUriAdapter implements FileDescriptorAdapter<Uri> {
     }
 
     @Override
-    public boolean isWriter(@NonNull Class adaptedType) {
-        return adaptedType.getName().equals(Uri.class.getName());
+    public boolean isAdapter(@NonNull Class adaptedType) {
+        return Uri.class.isAssignableFrom(adaptedType);
     }
 
 }

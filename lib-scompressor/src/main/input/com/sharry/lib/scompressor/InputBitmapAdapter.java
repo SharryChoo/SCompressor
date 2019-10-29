@@ -17,7 +17,7 @@ import java.io.FileOutputStream;
  * @version 1.0
  * @since 2019-06-12 14:29
  */
-public class InputBitmapAdapter implements FileDescriptorAdapter<Bitmap> {
+public class InputBitmapAdapter implements InputAdapter<Bitmap> {
 
     @Override
     public FileDescriptor adapt(Context context, String authority, @NonNull InputSource<Bitmap> inputSource) throws Throwable {
@@ -38,7 +38,7 @@ public class InputBitmapAdapter implements FileDescriptorAdapter<Bitmap> {
     }
 
     @Override
-    public boolean isWriter(@NonNull Class adaptedType) {
+    public boolean isAdapter(@NonNull Class adaptedType) {
         return adaptedType.getName().equals(Bitmap.class.getName());
     }
 

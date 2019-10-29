@@ -22,7 +22,7 @@ import java.util.List;
 public final class SCompressor {
 
     static final String TAG = SCompressor.class.getSimpleName();
-    static final List<FileDescriptorAdapter> INPUT_ADAPTERS = new ArrayList<>();
+    static final List<InputAdapter> INPUT_ADAPTERS = new ArrayList<>();
     static final List<OutputAdapter> OUTPUT_ADAPTERS = new ArrayList<>();
 
     static {
@@ -54,7 +54,7 @@ public final class SCompressor {
     /**
      * Add u custom input source adapter from here.
      */
-    public static void addInputAdapter(@NonNull FileDescriptorAdapter adapter) {
+    public static void addInputAdapter(@NonNull InputAdapter adapter) {
         Preconditions.checkNotNull(adapter);
         INPUT_ADAPTERS.add(adapter);
     }

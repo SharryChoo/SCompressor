@@ -15,7 +15,7 @@ import java.io.FileDescriptor;
  * @version 1.0
  * @since 2019-06-12 14:29
  */
-public class InputFilePathAdapter implements FileDescriptorAdapter<String> {
+public class InputFilePathAdapter implements InputAdapter<String> {
 
     @Override
     public FileDescriptor adapt(Context context, String authority, @NonNull InputSource<String> inputSource) throws Throwable {
@@ -25,7 +25,7 @@ public class InputFilePathAdapter implements FileDescriptorAdapter<String> {
     }
 
     @Override
-    public boolean isWriter(@NonNull Class adaptedType) {
+    public boolean isAdapter(@NonNull Class adaptedType) {
         return adaptedType.getName().equals(String.class.getName());
     }
 

@@ -13,7 +13,7 @@ import java.io.FileDescriptor;
  * @version 1.0
  * @since 2019-06-12 14:20
  */
-public interface FileDescriptorAdapter<InputType> {
+public interface InputAdapter<InputType> {
 
     /**
      * Adapter input data 2 picture path.
@@ -31,6 +31,6 @@ public interface FileDescriptorAdapter<InputType> {
      * @param adaptedType target adapter type.
      * @return is can adapter 2 target type.
      */
-    boolean isWriter(@NonNull Class adaptedType);
+    boolean isAdapter(@NonNull Class adaptedType);
 
 }

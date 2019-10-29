@@ -10,7 +10,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
@@ -58,17 +57,17 @@ public class MainActivity extends AppCompatActivity {
                         .setPickerConfig(PickerConfig.Builder().setThreshold(1).build())
                         .setLoaderEngine(new ILoaderEngine() {
                             @Override
-                            public void loadPicture(@NonNull Context context, @NonNull String s, @NonNull ImageView imageView) {
-                                Glide.with(context).load(s).into(imageView);
+                            public void loadPicture(@NonNull Context context, @NonNull MediaMeta mediaMeta, @NonNull ImageView imageView) {
+                                Glide.with(context).load(mediaMeta.getContentUri()).into(imageView);
                             }
 
                             @Override
-                            public void loadGif(@NonNull Context context, @NonNull String s, @NonNull ImageView imageView) {
+                            public void loadGif(@NonNull Context context, @NonNull MediaMeta mediaMeta, @NonNull ImageView imageView) {
 
                             }
 
                             @Override
-                            public void loadVideoThumbnails(@NonNull Context context, @NonNull String s, @Nullable String s1, @NonNull ImageView imageView) {
+                            public void loadVideoThumbnails(@NonNull Context context, @NonNull MediaMeta mediaMeta, @NonNull ImageView imageView) {
 
                             }
                         })
@@ -85,22 +84,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void doCompress(MediaMeta mediaMeta) {
         Log.e(TAG, "Origin file length is " + new File(mediaMeta.getPath()).length() / 1024 + "kb");
-        Bitmap bitmap = BitmapFactory.decodeFile(mediaMeta.getPath());
         // SCompressor 压缩
-        File destFile = performCompressBySCompressor(bitmap);
-        bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
+        File destFile = performCompressBySCompressor(mediaMeta.getContentUri());
+        Bitmap bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
         mIvScompressorCompressed.setImageBitmap(bitmap);
     }
 
-    private File performCompressBySCompressor(Bitmap bitmap) {
+    private File performCompressBySCompressor(Object inputSource) {
         long startTime = System.currentTimeMillis();
         File file = SCompressor.create()
                 // 使用自动降采样
-                .setAutoDownsample(false)
+                .setAutoDownsample(true)
                 // 使用算术编码
                 .setArithmeticCoding(false)
                 // 输入源
-                .setInputSource(bitmap)
+                .setInputSource(inputSource)
                 // 压缩后的期望大小
                 .setDesireLength(1000 * 500)
                 // 压缩质量

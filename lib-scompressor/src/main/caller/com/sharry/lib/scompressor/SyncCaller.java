@@ -82,8 +82,8 @@ final class SyncCaller {
     private static <OutputType, InputType> Bitmap handleOtherInputType(
             Request<InputType, OutputType> request
     ) throws Throwable {
-        // 1. Adapter input data 2 input path.
-        FileDescriptor fd = findInputWriter(request.inputSource.getType())
+        // 1. Adapter inputSource 2 FileDescriptor.
+        FileDescriptor fd = findInputAdapter(request.inputSource.getType())
                 .adapt(SCompressor.sContext, SCompressor.sAuthority, request.inputSource);
         // 2. Do compress.
         // 2.1 Nearest Neighbour down sampling compress
@@ -102,25 +102,25 @@ final class SyncCaller {
         return BitmapFactory.decodeFileDescriptor(fd, null, options);
     }
 
-    private static <Input> FileDescriptorAdapter<Input> findInputWriter(Class<Input> inputType) {
-        FileDescriptorAdapter<Input> writer = null;
-        for (FileDescriptorAdapter fileDescriptorAdapter : SCompressor.INPUT_ADAPTERS) {
-            if (fileDescriptorAdapter.isWriter(inputType)) {
-                writer = fileDescriptorAdapter;
+    private static <InputType> InputAdapter<InputType> findInputAdapter(Class<InputType> inputType) {
+        InputAdapter<InputType> adapter = null;
+        for (InputAdapter current : SCompressor.INPUT_ADAPTERS) {
+            if (current.isAdapter(inputType)) {
+                adapter = current;
             }
         }
-        if (writer == null) {
+        if (adapter == null) {
             throw new UnsupportedOperationException("Cannot find an adapter that can convert "
                     + inputType.getName() + " to pre quality compressed bitmap");
         }
-        return writer;
+        return adapter;
     }
 
     private static <Target> OutputAdapter<Target> findOutputAdapter(Class<Target> targetType) {
         OutputAdapter<Target> adapter = null;
-        for (OutputAdapter outputAdapter : SCompressor.OUTPUT_ADAPTERS) {
-            if (outputAdapter.isAdapter(targetType)) {
-                adapter = outputAdapter;
+        for (OutputAdapter current : SCompressor.OUTPUT_ADAPTERS) {
+            if (current.isAdapter(targetType)) {
+                adapter = current;
             }
         }
         if (adapter == null) {
