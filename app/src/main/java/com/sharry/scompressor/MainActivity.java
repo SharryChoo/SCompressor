@@ -37,7 +37,7 @@ import java.util.ArrayList;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = SCompressor.class.getSimpleName();
 
     private Button mBtnPicker;
     private ImageView mIvSkiaCompressed;
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        SCompressor.init(this);
+        SCompressor.init(this, "com.sharry.scompressor.FileProvider");
         initViews();
 
     }
@@ -88,18 +88,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private final String usableDir = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "SCompressor";
 
     private void doCompress(MediaMeta mediaMeta) {
-        File dir = new File(usableDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
+        File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         Log.e(TAG, "Origin file length is " + new File(mediaMeta.getPath()).length() / 1024 + "kb");
         Bitmap bitmap = BitmapFactory.decodeFile(mediaMeta.getPath());
         // SCompressor 压缩
-        File destFile = new File(dir, "SCompressor_" + System.currentTimeMillis() + ".jpg");
-        performCompressBySCompressor(bitmap, destFile);
+        File destFile = performCompressBySCompressor(mediaMeta.getPath());
         bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
         mIvScompressorCompressed.setImageBitmap(bitmap);
         // Skia 压缩
@@ -109,17 +104,15 @@ public class MainActivity extends AppCompatActivity {
         mIvSkiaCompressed.setImageBitmap(bitmap);
     }
 
-    private void performCompressBySCompressor(Bitmap bitmap, File file) {
+    private File performCompressBySCompressor(String bitmap) {
         long startTime = System.currentTimeMillis();
-        SCompressor.create()
+        File file = SCompressor.create()
                 // 使用自动降采样
-                .setAutoDownsample(true)
+                .setAutoDownsample(false)
                 // 使用算术编码
-                .setArithmeticCoding(false)
+                .setArithmeticCoding(true)
                 // 输入源
-                .setInputBitmap(bitmap)
-                // 输出路径
-                .setOutputPath(file.getAbsolutePath())
+                .setInputPath(bitmap)
                 // 压缩后的期望大小
                 .setDesireLength(1000 * 500)
                 // 压缩质量
@@ -132,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
                 "SCompressor compressed file length is " + (file.length() / 1024) + "kb, " +
                         "cost time is " + (endTime - startTime) + "ms"
         );
+        return file;
     }
 
     private void performCompressByAndroidSkia(Bitmap bitmap, File file) {

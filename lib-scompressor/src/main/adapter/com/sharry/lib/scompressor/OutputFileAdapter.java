@@ -13,14 +13,15 @@ import java.io.File;
  * @version 1.0
  * @since 2019-06-12 15:10
  */
-public class OutputFilePathAdapter implements OutputAdapter<String> {
+public class OutputFileAdapter implements OutputAdapter<File> {
+
     @Override
-    public String adapt(Context context, String authority, @NonNull File compressedFile) {
-        return compressedFile.getAbsolutePath();
+    public File adapt(Context context, String authority, @NonNull File compressedFile) {
+        return compressedFile;
     }
 
     @Override
     public boolean isAdapter(@NonNull Class adaptedType) {
-        return adaptedType.getName().equals(String.class.getName());
+        return adaptedType.getName().equals(File.class.getName());
     }
 }

@@ -1,6 +1,7 @@
 package com.sharry.lib.scompressor;
 
 import android.content.Context;
+import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
@@ -13,14 +14,16 @@ import java.io.File;
  * @version 1.0
  * @since 2019-06-12 15:10
  */
-public class OutputFilePathAdapter implements OutputAdapter<String> {
+public class OutputUriAdapter implements OutputAdapter<Uri> {
+
     @Override
-    public String adapt(Context context, String authority, @NonNull File compressedFile) {
-        return compressedFile.getAbsolutePath();
+    public Uri adapt(Context context, String authority, @NonNull File compressedFile) {
+        return FileUtil.getUriFromFile(context, authority, compressedFile);
     }
 
     @Override
     public boolean isAdapter(@NonNull Class adaptedType) {
-        return adaptedType.getName().equals(String.class.getName());
+        return adaptedType.getName().equals(Uri.class.getName());
     }
+
 }

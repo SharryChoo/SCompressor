@@ -1,12 +1,16 @@
 package com.sharry.lib.scompressor;
 
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.Dimension;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.io.File;
+import java.io.FileDescriptor;
 
 import static androidx.annotation.Dimension.PX;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
@@ -26,12 +30,12 @@ public class Request<InputType, OutputType> {
     /**
      * Input source associated with this compress task.
      */
-    final DataSource<InputType> inputSource;
+    final InputSource<InputType> inputSource;
 
     /**
      * Compress output source associated with this compress task.
      */
-    final DataSource<OutputType> outputSource;
+    final Class<OutputType> outputType;
 
     /**
      * Compress quality.
@@ -72,8 +76,8 @@ public class Request<InputType, OutputType> {
     final boolean isArithmeticCoding;
 
     private Request(
-            DataSource<InputType> inputSource,
-            DataSource<OutputType> outputSource,
+            InputSource<InputType> inputSource,
+            Class<OutputType> outputType,
             int quality,
             int destWidth,
             int destHeight,
@@ -81,7 +85,7 @@ public class Request<InputType, OutputType> {
             boolean isAutoDownsample,
             boolean isArithmeticCoding) {
         this.inputSource = inputSource;
-        this.outputSource = outputSource;
+        this.outputType = outputType;
         this.quality = quality;
         this.destWidth = destWidth;
         this.destHeight = destHeight;
@@ -94,7 +98,7 @@ public class Request<InputType, OutputType> {
     public String toString() {
         return "SCompressor Request{" +
                 "inputSource = " + inputSource.getType().getSimpleName() +
-                ", outputSource = " + outputSource.getType().getSimpleName() +
+                ", outputType = " + outputType.toString() +
                 ", quality = " + quality +
                 ", isAutoDownsample = " + isAutoDownsample +
                 ", destWidth = " + destWidth +
@@ -111,24 +115,11 @@ public class Request<InputType, OutputType> {
     public static class Builder<InputType, OutputType> {
 
         private static final int DEFAULT_QUALITY = 75;
+        private static final Class DEFAULT_OUTPUT_TYPE = File.class;
         private static final int INVALIDATE = -1;
-        private static final DataSource DEFAULT_OUTPUT_DATA_SOURCE = new DataSource<String>() {
 
-            @NonNull
-            @Override
-            public Class<String> getType() {
-                return String.class;
-            }
-
-            @Nullable
-            @Override
-            public String getSource() {
-                return null;
-            }
-        };
-
-        private DataSource inputSource;
-        private DataSource outputSource = DEFAULT_OUTPUT_DATA_SOURCE;
+        private InputSource inputSource;
+        private Class outputType = DEFAULT_OUTPUT_TYPE;
         private int quality = DEFAULT_QUALITY;
         private int desireWidth = INVALIDATE;
         private int desireHeight = INVALIDATE;
@@ -137,10 +128,11 @@ public class Request<InputType, OutputType> {
         private boolean isArithmeticCoding = false;
 
         Builder() {
+
         }
 
-        private Builder(DataSource inputSource,
-                        DataSource outputSource,
+        private Builder(InputSource inputSource,
+                        Class outputSource,
                         int quality,
                         int desireWidth,
                         int desireHeight,
@@ -148,7 +140,7 @@ public class Request<InputType, OutputType> {
                         boolean isAutoDownSample,
                         boolean isArithmeticCoding) {
             this.inputSource = inputSource;
-            this.outputSource = outputSource;
+            this.outputType = outputSource;
             this.quality = quality;
             this.desireWidth = desireWidth;
             this.desireHeight = desireHeight;
@@ -159,12 +151,10 @@ public class Request<InputType, OutputType> {
 
         /**
          * Set source image file path associated with this compress task.
-         * <p>
-         * The efficiency is nice.
          */
         public Builder<String, OutputType> setInputPath(@NonNull final String srcPath) {
             Preconditions.checkNotNull(srcPath);
-            return setInputSource(new DataSource<String>() {
+            return setInputSource(new InputSource<String>() {
                 @NonNull
                 @Override
                 public Class<String> getType() {
@@ -181,12 +171,10 @@ public class Request<InputType, OutputType> {
 
         /**
          * Set source image bitmap associated with this compress task.
-         * <p>
-         * The efficiency is low.
          */
         public Builder<Bitmap, OutputType> setInputBitmap(@NonNull final Bitmap srcBitmap) {
             Preconditions.checkNotNull(srcBitmap);
-            return setInputSource(new DataSource<Bitmap>() {
+            return setInputSource(new InputSource<Bitmap>() {
                 @NonNull
                 @Override
                 public Class<Bitmap> getType() {
@@ -202,16 +190,36 @@ public class Request<InputType, OutputType> {
         }
 
         /**
+         * Set source image fd associated with this compress task
+         */
+        public Builder<FileDescriptor, OutputType> setInputFileDescriptor(@NonNull final FileDescriptor fd) {
+            Preconditions.checkNotNull(fd);
+            return setInputSource(new InputSource<FileDescriptor>() {
+                @NonNull
+                @Override
+                public Class<FileDescriptor> getType() {
+                    return FileDescriptor.class;
+                }
+
+                @NonNull
+                @Override
+                public FileDescriptor getSource() {
+                    return fd;
+                }
+            });
+        }
+
+        /**
          * Set u custom input source.
          *
          * @param inputSource desc input source.
          */
         public <NewInputType> Builder<NewInputType, OutputType> setInputSource(
-                @NonNull DataSource<NewInputType> inputSource) {
+                @NonNull InputSource<NewInputType> inputSource) {
             this.inputSource = inputSource;
             return new Builder<>(
                     inputSource,
-                    outputSource,
+                    outputType,
                     quality,
                     desireWidth,
                     desireHeight,
@@ -238,31 +246,6 @@ public class Request<InputType, OutputType> {
             this.desireWidth = desireWidth;
             this.desireHeight = desireHeight;
             return this;
-        }
-
-        /**
-         * Set dest output file path associated with this compress request.
-         * <p>
-         * Output type will changed to String
-         *
-         * @param outputPath absolute file path.
-         */
-        public Builder<InputType, String> setOutputPath(@NonNull final String outputPath) {
-            Preconditions.checkNotEmpty(outputPath);
-            return setOutputSource(new DataSource<String>() {
-
-                @NonNull
-                @Override
-                public Class<String> getType() {
-                    return String.class;
-                }
-
-                @Override
-                public String getSource() {
-                    return outputPath;
-                }
-
-            });
         }
 
         /**
@@ -297,52 +280,48 @@ public class Request<InputType, OutputType> {
          * Convert output type to Bitmap
          */
         public Builder<InputType, Bitmap> asBitmap() {
-            return setOutputSource(new DataSource<Bitmap>() {
-                @NonNull
-                @Override
-                public Class<Bitmap> getType() {
-                    return Bitmap.class;
-                }
-
-                @Nullable
-                @Override
-                public Bitmap getSource() {
-                    return null;
-                }
-            });
+            return as(Bitmap.class);
         }
 
         /**
          * Convert output type to byte array.
          */
         public Builder<InputType, byte[]> asByteArray() {
-            return setOutputSource(new DataSource<byte[]>() {
-                @NonNull
-                @Override
-                public Class<byte[]> getType() {
-                    return byte[].class;
-                }
+            return as(byte[].class);
+        }
 
-                @Nullable
-                @Override
-                public byte[] getSource() {
-                    return null;
-                }
-            });
+        /**
+         * Convert output type to Uri.
+         */
+        public Builder<InputType, Uri> asUri() {
+            return as(Uri.class);
+        }
+
+        /**
+         * Convert output type to File path.
+         */
+        public Builder<InputType, String> asFilePath() {
+            return as(String.class);
+        }
+
+        /**
+         * Convert output type to File.
+         */
+        public Builder<InputType, File> asFile() {
+            return as(File.class);
         }
 
         /**
          * Set u custom output source.
          *
-         * @param outputDataSource desc output data source.
+         * @param outputType desc output data source.
          */
-        public <NewOutputType> Builder<InputType, NewOutputType> setOutputSource(
-                @NonNull DataSource<NewOutputType> outputDataSource) {
-            Preconditions.checkNotNull(outputDataSource);
-            this.outputSource = outputDataSource;
+        public <NewOutputType> Builder<InputType, NewOutputType> as(Class<NewOutputType> outputType) {
+            Preconditions.checkNotNull(outputType);
+            this.outputType = outputType;
             return new Builder<>(
                     inputSource,
-                    outputSource,
+                    outputType,
                     quality,
                     desireWidth,
                     desireHeight,
@@ -384,7 +363,7 @@ public class Request<InputType, OutputType> {
             SCompressor.asyncCall(
                     new Request<InputType, OutputType>(
                             inputSource,
-                            outputSource,
+                            outputType,
                             quality,
                             desireWidth,
                             desireHeight,
@@ -405,7 +384,7 @@ public class Request<InputType, OutputType> {
             return SCompressor.syncCall(
                     new Request<InputType, OutputType>(
                             inputSource,
-                            outputSource,
+                            outputType,
                             quality,
                             desireWidth,
                             desireHeight,

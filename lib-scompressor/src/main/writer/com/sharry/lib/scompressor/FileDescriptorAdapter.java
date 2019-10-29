@@ -1,25 +1,29 @@
 package com.sharry.lib.scompressor;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
+import java.io.FileDescriptor;
+
 /**
- * The writer related on user input data.
- * <p>
- * write input data 2 disk.
+ * Adapter {@link InputSource} to {@link FileDescriptor}
  *
  * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
  * @version 1.0
  * @since 2019-06-12 14:20
  */
-public interface InputWriter<InputType> {
+public interface FileDescriptorAdapter<InputType> {
 
     /**
      * Adapter input data 2 picture path.
      *
+     * @param context     Android Application Context
+     * @param authority   FileProvider Authority
      * @param inputSource the compress input.
      * @return file path.
      */
-    String writeToDisk(@NonNull DataSource<InputType> inputSource) throws Throwable;
+    FileDescriptor adapt(Context context, String authority, @NonNull InputSource<InputType> inputSource) throws Throwable;
 
     /**
      * Is can adapter 2 target type.

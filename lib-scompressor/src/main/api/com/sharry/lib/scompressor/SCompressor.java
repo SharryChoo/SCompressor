@@ -6,6 +6,8 @@ import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.sharry.lib.BuildConfig;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,33 +22,39 @@ import java.util.List;
 public final class SCompressor {
 
     static final String TAG = SCompressor.class.getSimpleName();
-    static final List<InputWriter> INPUT_ADAPTERS = new ArrayList<>();
+    static final List<FileDescriptorAdapter> INPUT_ADAPTERS = new ArrayList<>();
     static final List<OutputAdapter> OUTPUT_ADAPTERS = new ArrayList<>();
 
     static {
         // add default input adapters.
-        INPUT_ADAPTERS.add(new InputFilePathWriter());
-        INPUT_ADAPTERS.add(new InputBitmapWriter());
+        INPUT_ADAPTERS.add(new InputFilePathAdapter());
+        INPUT_ADAPTERS.add(new InputBitmapAdapter());
+        INPUT_ADAPTERS.add(new InputUriAdapter());
         // add default output adapters.
         OUTPUT_ADAPTERS.add(new OutputBitmapAdapter());
         OUTPUT_ADAPTERS.add(new OutputFilePathAdapter());
         OUTPUT_ADAPTERS.add(new OutputByteArrayAdapter());
+        OUTPUT_ADAPTERS.add(new OutputUriAdapter());
+        OUTPUT_ADAPTERS.add(new OutputFileAdapter());
     }
 
-    static File sUsableDir;
+    static Context sContext;
+    static String sAuthority;
 
     /**
      * Init usable Dir, helper generate temp file.
      */
-    public static void init(@NonNull Context context) {
+    public static void init(@NonNull Context context, String authority) {
         Preconditions.checkNotNull(context, "Please ensure context non null!");
-        sUsableDir = context.getCacheDir();
+        Preconditions.checkNotNull(authority, "Please ensure authority non null!");
+        sContext = context.getApplicationContext();
+        sAuthority = authority;
     }
 
     /**
      * Add u custom input source adapter from here.
      */
-    public static void addInputAdapter(@NonNull InputWriter adapter) {
+    public static void addInputAdapter(@NonNull FileDescriptorAdapter adapter) {
         Preconditions.checkNotNull(adapter);
         INPUT_ADAPTERS.add(adapter);
     }
@@ -63,7 +71,7 @@ public final class SCompressor {
      * Get an instance of Request.Builder
      */
     @NonNull
-    public static Request.Builder<Bitmap, String> create() {
+    public static Request.Builder<Bitmap, File> create() {
         return new Request.Builder<>();
     }
 
@@ -88,7 +96,9 @@ public final class SCompressor {
         try {
             output = SyncCaller.execute(request);
         } catch (Throwable throwable) {
-            // ignore.
+            if (BuildConfig.DEBUG) {
+                throwable.printStackTrace();
+            }
         }
         return output;
     }

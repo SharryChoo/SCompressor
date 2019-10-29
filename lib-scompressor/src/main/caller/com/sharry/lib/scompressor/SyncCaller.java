@@ -5,11 +5,13 @@ import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.util.Log;
 
+import com.sharry.lib.BuildConfig;
+
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 
 import static com.sharry.lib.scompressor.Core.calculateSampleSize;
-import static com.sharry.lib.scompressor.Core.createUnsuspectedFile;
 import static com.sharry.lib.scompressor.Core.nativeCompress;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
 
@@ -20,35 +22,32 @@ import static com.sharry.lib.scompressor.SCompressor.TAG;
  */
 final class SyncCaller {
 
-    private static final String UNSUSPECTED_FILE_PREFIX = "SCompressor_";
-
     static <InputType, OutputType> OutputType execute(Request<InputType, OutputType> request) throws Throwable {
         // 1. validate.
-        DataSource<InputType> inputSource = request.inputSource;
-        DataSource<OutputType> outputSource = request.outputSource;
+        InputSource<InputType> inputSource = request.inputSource;
         if (inputSource.getSource() == null) {
             throw new NullPointerException();
         }
-        Log.i(TAG, request.toString());
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG, request.toString());
+        }
         // 2. Down sample
         Bitmap downsampledBitmap;
-        if (Bitmap.class.getSimpleName().equals(request.inputSource.getType().getName())) {
+        if (Bitmap.class.getName().equals(inputSource.getType().getName())) {
             downsampledBitmap = handleBitmapInputType(request);
         } else {
             downsampledBitmap = handleOtherInputType(request);
         }
         // 3. Quality compress
-        File outputFile;
-        if (String.class.equals(outputSource.getType()) && outputSource.getSource() != null) {
-            outputFile = new File((String) outputSource.getSource());
-        } else {
-            outputFile = createUnsuspectedFile();
-        }
+        File outputFile = FileUtil.createOutputFile(SCompressor.sContext);
         qualityCompress(request, downsampledBitmap, outputFile);
         // 4. Adapter 2 target type.
-        Log.i(TAG, "Output file is: " + outputFile.getAbsolutePath());
-        Log.i(TAG, "Output file length is " + outputFile.length() / 1024 + "kb");
-        return findOutputAdapter(outputSource.getType()).adapt(outputFile);
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG, "Output file is: " + outputFile.getAbsolutePath());
+            Log.e(TAG, "Output file length is " + outputFile.length() / 1024 + "kb");
+        }
+        return findOutputAdapter(request.outputType).adapt(SCompressor.sContext,
+                SCompressor.sAuthority, outputFile);
     }
 
     private static <OutputType, InputType> Bitmap handleBitmapInputType(
@@ -84,39 +83,30 @@ final class SyncCaller {
             Request<InputType, OutputType> request
     ) throws Throwable {
         // 1. Adapter input data 2 input path.
-        String inputFilePath = findInputWriter(request.inputSource.getType())
-                .writeToDisk(request.inputSource);
+        FileDescriptor fd = findInputWriter(request.inputSource.getType())
+                .adapt(SCompressor.sContext, SCompressor.sAuthority, request.inputSource);
         // 2. Do compress.
         // 2.1 Nearest Neighbour down sampling compress
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         if (request.destWidth == Request.INVALIDATE || request.destHeight == Request.INVALIDATE) {
             if (request.isAutoDownsample) {
-                options.inSampleSize = calculateSampleSize(inputFilePath);
+                options.inSampleSize = calculateSampleSize(fd);
             } else {
                 Log.i(TAG, "Do not need down sample");
             }
         } else {
-            options.inSampleSize = calculateSampleSize(inputFilePath,
+            options.inSampleSize = calculateSampleSize(fd,
                     request.destWidth, request.destHeight);
         }
-        Bitmap downsampledBitmap = BitmapFactory.decodeFile(inputFilePath, options);
-        // 2.2 Try to rotate Bitmap
-        downsampledBitmap = Core.rotateBitmap(downsampledBitmap,
-                Core.readImageRotateAngle(inputFilePath));
-        // If the file is unsuspected file, then delete it.
-        if (inputFilePath.startsWith(UNSUSPECTED_FILE_PREFIX)) {
-            File tempFile = new File(inputFilePath);
-            tempFile.delete();
-        }
-        return downsampledBitmap;
+        return BitmapFactory.decodeFileDescriptor(fd, null, options);
     }
 
-    private static <Input> InputWriter<Input> findInputWriter(Class<Input> inputType) {
-        InputWriter<Input> writer = null;
-        for (InputWriter inputWriter : SCompressor.INPUT_ADAPTERS) {
-            if (inputWriter.isWriter(inputType)) {
-                writer = inputWriter;
+    private static <Input> FileDescriptorAdapter<Input> findInputWriter(Class<Input> inputType) {
+        FileDescriptorAdapter<Input> writer = null;
+        for (FileDescriptorAdapter fileDescriptorAdapter : SCompressor.INPUT_ADAPTERS) {
+            if (fileDescriptorAdapter.isWriter(inputType)) {
+                writer = fileDescriptorAdapter;
             }
         }
         if (writer == null) {
