@@ -32,26 +32,26 @@ class FileUtil {
     }
 
     /**
-     * 创建临时文件
+     * 创建输出文件
      *
      * @return 创建的文件
      */
     static File createOutputFile(Context context) {
-        // 获取临时文件目录
+        // 获取文件目录
         File tempDirectory = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         // 创建压缩文件
-        String tempFileName = "compress_" + DateFormat.format("yyyyMMdd_HH_mm_ss",
+        String fileName = "compress_" + DateFormat.format("yyyyMMdd_HH_mm_ss",
                 Calendar.getInstance(Locale.CHINA)) + ".jpg";
-        File tempFile = new File(tempDirectory, tempFileName);
+        File file = new File(tempDirectory, fileName);
         try {
-            if (tempFile.exists()) {
-                tempFile.delete();
+            if (file.exists()) {
+                file.delete();
             }
-            tempFile.createNewFile();
+            file.createNewFile();
         } catch (IOException e) {
             // ignore.
         }
-        return tempFile;
+        return file;
     }
 
     /**

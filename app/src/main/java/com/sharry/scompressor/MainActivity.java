@@ -81,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
     private void doCompress(MediaMeta mediaMeta) {
         Log.e(TAG, "Origin file length is " + new File(mediaMeta.getPath()).length() / 1024 + "kb");
         // SCompressor 压缩
