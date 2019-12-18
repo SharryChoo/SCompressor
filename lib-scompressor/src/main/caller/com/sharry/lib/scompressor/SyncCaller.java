@@ -5,39 +5,34 @@ import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import com.sharry.lib.BuildConfig;
+import com.sharry.lib.scompressor.recycleable.RecyclableBufferedInputStream;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import static com.sharry.lib.scompressor.Core.calculateSampleSize;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
+import static com.sharry.lib.scompressor.SCompressor.sArrayPool;
 
 /**
  * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
  * @version 1.0
  * @since 2019-09-19 14:13
  */
+@SuppressWarnings("all")
 final class SyncCaller {
 
     static <InputType, OutputType> OutputType execute(Request<InputType, OutputType> request) throws Throwable {
-        // 1. validate.
-        InputSource<InputType> inputSource = request.inputSource;
-        if (inputSource.getSource() == null) {
-            throw new NullPointerException();
-        }
         if (BuildConfig.DEBUG) {
             Log.e(TAG, request.toString());
         }
-        // 2. Do down sample
+        // 1. Do down sample
         Bitmap downsampledBitmap = doDownsampler(request);
         if (downsampledBitmap == null) {
             return null;
         }
-        // 3. If output type is bitmap, return directly.
+        // 2. If output type is bitmap, return directly.
         if (Bitmap.class.getName().equals(request.outputType.getName())) {
             return (OutputType) downsampledBitmap;
         }
@@ -66,9 +61,6 @@ final class SyncCaller {
 
     private static <OutputType, InputType> Bitmap handleBitmapInputType(Request<InputType, OutputType> request) {
         Bitmap originBitmap = (Bitmap) request.inputSource.getSource();
-        if (originBitmap == null) {
-            throw new NullPointerException("Please ensure input source not null!");
-        }
         int sampleSize;
         if (request.requestedWidth == Request.INVALIDATE || request.requestedHeight == Request.INVALIDATE) {
             if (request.isAutoDownsample) {
@@ -97,25 +89,21 @@ final class SyncCaller {
      */
     private static final int MARK_POSITION = 5 * 1024 * 1024;
 
-    private static <OutputType, InputType> Bitmap handleOtherInputType(
-            Request<InputType, OutputType> request
-    ) throws Throwable {
+    private static <OutputType, InputType> Bitmap handleOtherInputType(Request<InputType, OutputType> request) throws Throwable {
         // 1. Adapter inputSource 2 FileDescriptor.
-        FileDescriptor fd = findInputAdapter(request.inputSource.getType())
+        InputStream originIs = findInputAdapter(request.inputSource.getType())
                 .adapt(SCompressor.sContext, SCompressor.sAuthority, request.inputSource);
         // 2. create input stream for this fd.
-        InputStream is = new BufferedInputStream(new FileInputStream(fd));
-
+        InputStream wrapperIs = new RecyclableBufferedInputStream(originIs, sArrayPool);
+        wrapperIs.mark(MARK_POSITION);  // mark start.
         // 3. Ensure color channel.
         BitmapFactory.Options options = new BitmapFactory.Options();
-        is.mark(MARK_POSITION);  // mark start.
-        options.inPreferredConfig = ImageUtil.hasAlpha(is) ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
-        is.reset();             // back to start.
+        options.inPreferredConfig = ImageUtil.hasAlpha(wrapperIs) ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
+        wrapperIs.reset();             // back to start.
         // 4. Ensure sample size.
         options.inJustDecodeBounds = true;
-        is.mark(MARK_POSITION);  // mark start.
-        BitmapFactory.decodeStream(is, null, options);
-        is.reset();              // back to start.
+        BitmapFactory.decodeStream(wrapperIs, null, options);
+        wrapperIs.reset();              // back to start.
         options.inJustDecodeBounds = false;
         // calculate sample size.
         if (request.requestedWidth == Request.INVALIDATE || request.requestedHeight == Request.INVALIDATE) {
@@ -130,10 +118,9 @@ final class SyncCaller {
         }
         Log.i(TAG, "options.inSampleSize is " + options.inSampleSize);
         // 5. Do Neighbour down sampling compress
-        is.mark(MARK_POSITION);  // mark start.
-        Bitmap result = BitmapFactory.decodeStream(is, null, options);
-        is.reset();              // back to start.
-        is.close();              // close the stream.
+        Bitmap result = BitmapFactory.decodeStream(wrapperIs, null, options);
+        // close the stream.
+        wrapperIs.close();
         return result;
     }
 

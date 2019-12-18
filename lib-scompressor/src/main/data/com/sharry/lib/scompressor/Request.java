@@ -110,7 +110,7 @@ public class Request<InputType, OutputType> {
     @Override
     public String toString() {
         return "Request{" + "\n" +
-                "inputSource=" + inputSource.getType().getName() + "\n" +
+                "inputSource=" + inputSource + "\n" +
                 ", outputType=" + outputType + "\n" +
                 ", requestedQuality=" + requestedQuality + "\n" +
                 ", requestedWidth=" + requestedWidth + "\n" +
@@ -141,7 +141,7 @@ public class Request<InputType, OutputType> {
         private int requestedWidth = INVALIDATE;
         private int requestedHeight = INVALIDATE;
         private int requestedLength = INVALIDATE;
-        private boolean isAutoDownSample = true;
+        private boolean isAutoDownsample = true;
         private boolean isArithmeticCoding = false;
         private CompressFormat withoutAlpha = CompressFormat.JPEG;
         private CompressFormat withAlpha = CompressFormat.PNG;
@@ -156,7 +156,7 @@ public class Request<InputType, OutputType> {
                         int requestedWidth,
                         int requestedHeight,
                         int requestedLength,
-                        boolean isAutoDownSample,
+                        boolean isAutoDownsample,
                         boolean isArithmeticCoding,
                         CompressFormat withoutAlpha,
                         CompressFormat withAlpha) {
@@ -166,7 +166,7 @@ public class Request<InputType, OutputType> {
             this.requestedWidth = requestedWidth;
             this.requestedHeight = requestedHeight;
             this.requestedLength = requestedLength;
-            this.isAutoDownSample = isAutoDownSample;
+            this.isAutoDownsample = isAutoDownsample;
             this.isArithmeticCoding = isArithmeticCoding;
             this.withoutAlpha = withoutAlpha;
             this.withAlpha = withAlpha;
@@ -180,7 +180,8 @@ public class Request<InputType, OutputType> {
          *                    File Path {@link String},
          *                    File Uri {@link Uri}
          */
-        public <NewInputType> Builder<NewInputType, OutputType> setInputSource(final NewInputType inputSource) {
+        public <NewInputType> Builder<NewInputType, OutputType> setInputSource(@NonNull final NewInputType inputSource) {
+            Preconditions.checkNotNull(inputSource);
             this.inputSource = new InputSource() {
                 @NonNull
                 @Override
@@ -188,7 +189,7 @@ public class Request<InputType, OutputType> {
                     return inputSource.getClass();
                 }
 
-                @Nullable
+                @NonNull
                 @Override
                 public Object getSource() {
                     return inputSource;
@@ -201,7 +202,7 @@ public class Request<InputType, OutputType> {
                     requestedWidth,
                     requestedHeight,
                     requestedLength,
-                    isAutoDownSample,
+                    isAutoDownsample,
                     isArithmeticCoding,
                     withoutAlpha,
                     withAlpha
@@ -231,7 +232,7 @@ public class Request<InputType, OutputType> {
          * Set up support auto down sample or not.
          */
         public Builder<InputType, OutputType> setAutoDownsample(boolean autoDownSample) {
-            isAutoDownSample = autoDownSample;
+            isAutoDownsample = autoDownSample;
             return this;
         }
 
@@ -323,7 +324,7 @@ public class Request<InputType, OutputType> {
                     requestedWidth,
                     requestedHeight,
                     requestedLength,
-                    isAutoDownSample,
+                    isAutoDownsample,
                     isArithmeticCoding,
                     withoutAlpha,
                     withAlpha
@@ -367,7 +368,7 @@ public class Request<InputType, OutputType> {
                             requestedWidth,
                             requestedHeight,
                             requestedLength,
-                            isAutoDownSample,
+                            isAutoDownsample,
                             isArithmeticCoding,
                             withoutAlpha,
                             withAlpha
@@ -390,7 +391,7 @@ public class Request<InputType, OutputType> {
                             requestedWidth,
                             requestedHeight,
                             requestedLength,
-                            isAutoDownSample,
+                            isAutoDownsample,
                             isArithmeticCoding,
                             withoutAlpha,
                             withAlpha

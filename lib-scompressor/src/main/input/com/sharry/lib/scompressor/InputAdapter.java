@@ -5,9 +5,10 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import java.io.FileDescriptor;
+import java.io.InputStream;
 
 /**
- * Adapter {@link InputSource} to {@link FileDescriptor}
+ * Adapter {@link InputSource} to {@link java.io.InputStream}
  *
  * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
  * @version 1.0
@@ -23,7 +24,7 @@ public interface InputAdapter<InputType> {
      * @param inputSource the compress input.
      * @return file path.
      */
-    FileDescriptor adapt(Context context, String authority, @NonNull InputSource<InputType> inputSource) throws Throwable;
+    InputStream adapt(Context context, String authority, @NonNull InputSource<InputType> inputSource) throws Throwable;
 
     /**
      * Is can adapter 2 target type.

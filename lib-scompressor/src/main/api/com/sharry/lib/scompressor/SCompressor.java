@@ -7,6 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.sharry.lib.BuildConfig;
+import com.sharry.lib.scompressor.recycleable.ArrayPool;
+import com.sharry.lib.scompressor.recycleable.LruArrayPool;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ public final class SCompressor {
 
     static Context sContext;
     static String sAuthority;
+    static ArrayPool sArrayPool;
 
     /**
      * Init usable Dir, helper generate temp file.
@@ -36,6 +39,7 @@ public final class SCompressor {
         Preconditions.checkNotNull(authority, "Please ensure authority non null!");
         sContext = context.getApplicationContext();
         sAuthority = authority;
+        sArrayPool = new LruArrayPool();
         // add default input adapters.
         addInputAdapter(new InputFilePathAdapter());
         addInputAdapter(new InputUriAdapter());
@@ -61,6 +65,10 @@ public final class SCompressor {
     public static void addOutputAdapter(@NonNull OutputAdapter adapter) {
         Preconditions.checkNotNull(adapter);
         OUTPUT_ADAPTERS.add(adapter);
+    }
+
+    public static void replaceArrayPool(ArrayPool arrayPool) {
+        sArrayPool = arrayPool;
     }
 
     /**
