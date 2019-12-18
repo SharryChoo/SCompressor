@@ -36,12 +36,12 @@ class FileUtil {
      *
      * @return 创建的文件
      */
-    static File createOutputFile(Context context) {
+    static File createOutputFile(Context context, String suffix) {
         // 获取文件目录
         File tempDirectory = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         // 创建压缩文件
         String fileName = "compress_" + DateFormat.format("yyyyMMdd_HH_mm_ss",
-                Calendar.getInstance(Locale.CHINA)) + ".jpg";
+                Calendar.getInstance(Locale.CHINA)) + suffix;
         File file = new File(tempDirectory, fileName);
         try {
             if (file.exists()) {

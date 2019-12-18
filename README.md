@@ -75,7 +75,7 @@ Use input file path can get nice efficiency.
 
 If u custom input source, u need implement InputAdapter and add it.
 
-### Setup quality
+### Setup requestedQuality
 ```
 SCompressor.create()
         .setInputPath(url)

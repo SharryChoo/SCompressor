@@ -1,9 +1,14 @@
 package com.sharry.lib.scompressor;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.os.Build;
+import android.util.Log;
 
-import java.io.InputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import static com.sharry.lib.scompressor.SCompressor.TAG;
 
 /**
  * The core algorithm associated with picture compress.
@@ -14,12 +19,14 @@ import java.io.InputStream;
  */
 final class Core {
 
-    static int calculateAutoSampleSize(int srcWidth, int srcHeight) {
-        srcWidth = srcWidth % 2 == 1 ? srcWidth + 1 : srcWidth;
-        srcHeight = srcHeight % 2 == 1 ? srcHeight + 1 : srcHeight;
+    // ///////////////////////////////// Down sampler //////////////////////////////////////
 
-        int longSide = Math.max(srcWidth, srcHeight);
-        int shortSide = Math.min(srcWidth, srcHeight);
+    static int calculateAutoSampleSize(int sourceWidth, int sourceHeight) {
+        sourceWidth = sourceWidth % 2 == 1 ? sourceWidth + 1 : sourceWidth;
+        sourceHeight = sourceHeight % 2 == 1 ? sourceHeight + 1 : sourceHeight;
+
+        int longSide = Math.max(sourceWidth, sourceHeight);
+        int shortSide = Math.min(sourceWidth, sourceHeight);
 
         float scale = ((float) shortSide / longSide);
         if (scale <= 1 && scale > 0.5625) {
@@ -39,18 +46,18 @@ final class Core {
         }
     }
 
-    static int calculateSampleSize(int srcWidth, int srcHeight, int destWidth, int destHeight) {
-        if (srcWidth < destWidth && srcHeight < destHeight) {
+    static int calculateSampleSize(int sourceWidth, int sourceHeight, int requestedWidth, int requestedHeight) {
+        if (sourceWidth < requestedWidth && sourceHeight < requestedHeight) {
             return 1;
         }
         // 1. Calculate exact factor.
-        double exactScaleFactor = Math.max((float) destWidth / (float) srcWidth,
-                (float) destHeight / (float) srcHeight);
+        double exactScaleFactor = Math.max((float) requestedWidth / (float) sourceWidth,
+                (float) requestedHeight / (float) sourceHeight);
         // 2. Calculate scale factor.
-        int outWidth = (int) Math.round(exactScaleFactor * srcWidth);
-        int outHeight = (int) Math.round(exactScaleFactor * srcHeight);
-        int widthScaleFactor = srcWidth / outWidth;
-        int heightScaleFactor = srcHeight / outHeight;
+        int outWidth = (int) Math.round(exactScaleFactor * sourceWidth);
+        int outHeight = (int) Math.round(exactScaleFactor * sourceHeight);
+        int widthScaleFactor = sourceWidth / outWidth;
+        int heightScaleFactor = sourceHeight / outHeight;
         int scaleFactor = Math.max(widthScaleFactor, heightScaleFactor);
         // 3. Calculate sample size.(convert scaleFactor to 2 power.)
         int powerOfTwoSampleSize = Math.max(1, Integer.highestOneBit(scaleFactor));
@@ -58,15 +65,74 @@ final class Core {
             powerOfTwoSampleSize = powerOfTwoSampleSize << 1;
         }
         // 4. Adjust weird picture.
-        final float totalPixels = srcWidth * srcHeight;
-        final float desirePixels = destWidth * destHeight << 1;
+        final float totalPixels = sourceWidth * sourceHeight;
+        final float desirePixels = requestedWidth * requestedHeight << 1;
         while (totalPixels / (powerOfTwoSampleSize * powerOfTwoSampleSize) > desirePixels) {
             powerOfTwoSampleSize = powerOfTwoSampleSize << 1;
         }
         return powerOfTwoSampleSize;
     }
+    // ///////////////////////////////// Quality compress //////////////////////////////////////
 
-    ////////////////// native method /////////////////////
+    static void compressJpeg(Bitmap sourceBitmap, int requestedQuality, boolean isArithmeticCoding,
+                             int requestedLength, File compressedFile) throws IOException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !isArithmeticCoding) {
+            compressBySkia(sourceBitmap, requestedQuality, requestedLength, compressedFile, Bitmap.CompressFormat.JPEG);
+        } else {
+            compressByLibjpegTurbo(sourceBitmap, requestedQuality, isArithmeticCoding, requestedLength, compressedFile);
+        }
+    }
+
+    static void compressPng(Bitmap sourceBitmap, int requestedQuality,
+                            int requestedLength, File compressedFile) throws IOException {
+        compressBySkia(sourceBitmap, requestedQuality, requestedLength, compressedFile, Bitmap.CompressFormat.PNG);
+    }
+
+    static void compressWebp(Bitmap sourceBitmap, int requestedQuality,
+                             int requestedLength, File compressedFile) throws IOException {
+        compressBySkia(sourceBitmap, requestedQuality, requestedLength, compressedFile, Bitmap.CompressFormat.WEBP);
+    }
+
+    static void compressBySkia(Bitmap sourceBitmap, int quality,
+                               int desireOutputFileLength, File compressedFile,
+                               Bitmap.CompressFormat compressFormat) throws IOException {
+        do {
+            FileOutputStream fos = new FileOutputStream(compressedFile);
+            sourceBitmap.compress(compressFormat, quality, fos);
+            fos.flush();
+            fos.close();
+            quality -= 10;
+        } while (
+                desireOutputFileLength != Request.INVALIDATE &&
+                        compressedFile.length() > desireOutputFileLength &&
+                        quality > 0
+        );
+    }
+
+    private static void compressByLibjpegTurbo(Bitmap sourceBitmap, int requestedQuality,
+                                               boolean isArithmeticCoding,
+                                               int requestedLength, File compressedFile) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // if bitmap config is Hardware, we need convert 2 other type ensure we can fetch bitmap pixels.
+            if (sourceBitmap.getConfig() == Bitmap.Config.HARDWARE) {
+                sourceBitmap = sourceBitmap.copy(Bitmap.Config.ARGB_8888, true);
+            }
+        }
+        do {
+            int compressStatus = nativeCompress(sourceBitmap, requestedQuality,
+                    compressedFile.getAbsolutePath(), isArithmeticCoding);
+            // Verify compress result.
+            if (compressStatus == 0) {
+                Log.e(TAG, "Compress failed.");
+                throw new RuntimeException("Native requestedQuality compress failed.");
+            }
+            requestedQuality -= 10;
+        } while (requestedLength != Request.INVALIDATE &&
+                compressedFile.length() > requestedLength &&
+                requestedQuality > 0);
+    }
+
+    // ///////////////////////////////// Native method //////////////////////////////////////
 
     static {
         System.loadLibrary("scompressor");

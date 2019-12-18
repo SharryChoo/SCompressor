@@ -1,10 +1,5 @@
 package com.sharry.lib.scompressor;
 
-import android.util.Log;
-
-import java.io.BufferedInputStream;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;

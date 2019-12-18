@@ -18,6 +18,7 @@ import com.sharry.lib.album.MediaMeta;
 import com.sharry.lib.album.PickerCallback;
 import com.sharry.lib.album.PickerConfig;
 import com.sharry.lib.album.PickerManager;
+import com.sharry.lib.scompressor.CompressFormat;
 import com.sharry.lib.scompressor.SCompressor;
 
 import java.io.File;
@@ -105,7 +106,14 @@ public class MainActivity extends AppCompatActivity {
                 // 压缩后的期望大小
                 .setDesireLength(1000 * 500)
                 // 压缩质量
-                .setQuality(50)
+                .setQuality(70)
+                // 设置压缩后文件输出类型
+                .setCompressFormat(
+                        // 非透明通道文件输出
+                        CompressFormat.JPEG,
+                        // 透明通道文件输出类型
+                        CompressFormat.WEBP
+                )
                 // 转为目标类型
                 .asFile()
                 // 同步调用

@@ -2,7 +2,6 @@ package com.sharry.lib.scompressor;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Build;
 import android.util.Log;
 
 import com.sharry.lib.BuildConfig;
@@ -11,11 +10,10 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 import static com.sharry.lib.scompressor.Core.calculateSampleSize;
-import static com.sharry.lib.scompressor.Core.nativeCompress;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
 
 /**
@@ -43,7 +41,7 @@ final class SyncCaller {
         if (Bitmap.class.getName().equals(request.outputType.getName())) {
             return (OutputType) downsampledBitmap;
         }
-        // 3. Do quality compress
+        // 3. Do requestedQuality compress
         File compressedFile = doQualityCompress(request, downsampledBitmap);
         // 4. Adapter 2 target type.
         if (BuildConfig.DEBUG) {
@@ -72,7 +70,7 @@ final class SyncCaller {
             throw new NullPointerException("Please ensure input source not null!");
         }
         int sampleSize;
-        if (request.destWidth == Request.INVALIDATE || request.destHeight == Request.INVALIDATE) {
+        if (request.requestedWidth == Request.INVALIDATE || request.requestedHeight == Request.INVALIDATE) {
             if (request.isAutoDownsample) {
                 sampleSize = Core.calculateAutoSampleSize(originBitmap.getWidth(), originBitmap.getHeight());
             } else {
@@ -80,7 +78,7 @@ final class SyncCaller {
             }
         } else {
             sampleSize = calculateSampleSize(originBitmap.getWidth(), originBitmap.getHeight(),
-                    request.destWidth, request.destHeight);
+                    request.requestedWidth, request.requestedHeight);
         }
         if (sampleSize == 1) {
             Log.i(TAG, "Do not need down sample");
@@ -92,6 +90,8 @@ final class SyncCaller {
     }
 
     /**
+     * Thanks for Glide.
+     * <p>
      * 5MB. This is the max image header size we can handle, we preallocate a much smaller buffer but
      * will resize up to this amount if necessary.
      */
@@ -105,19 +105,20 @@ final class SyncCaller {
                 .adapt(SCompressor.sContext, SCompressor.sAuthority, request.inputSource);
         // 2. create input stream for this fd.
         InputStream is = new BufferedInputStream(new FileInputStream(fd));
-        // mark start.
-        is.mark(MARK_POSITION);
+
         // 3. Ensure color channel.
         BitmapFactory.Options options = new BitmapFactory.Options();
+        is.mark(MARK_POSITION);  // mark start.
         options.inPreferredConfig = ImageUtil.hasAlpha(is) ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
-        is.reset(); // back to start.
+        is.reset();             // back to start.
         // 4. Ensure sample size.
         options.inJustDecodeBounds = true;
+        is.mark(MARK_POSITION);  // mark start.
         BitmapFactory.decodeStream(is, null, options);
-        is.reset(); // back to start.
+        is.reset();              // back to start.
         options.inJustDecodeBounds = false;
         // calculate sample size.
-        if (request.destWidth == Request.INVALIDATE || request.destHeight == Request.INVALIDATE) {
+        if (request.requestedWidth == Request.INVALIDATE || request.requestedHeight == Request.INVALIDATE) {
             if (request.isAutoDownsample) {
                 options.inSampleSize = Core.calculateAutoSampleSize(options.outWidth, options.outHeight);
             } else {
@@ -125,12 +126,14 @@ final class SyncCaller {
             }
         } else {
             options.inSampleSize = Core.calculateSampleSize(options.outWidth, options.outHeight,
-                    request.destWidth, request.destHeight);
+                    request.requestedWidth, request.requestedHeight);
         }
         Log.i(TAG, "options.inSampleSize is " + options.inSampleSize);
         // 5. Do Neighbour down sampling compress
+        is.mark(MARK_POSITION);  // mark start.
         Bitmap result = BitmapFactory.decodeStream(is, null, options);
-        is.close();
+        is.reset();              // back to start.
+        is.close();              // close the stream.
         return result;
     }
 
@@ -143,7 +146,7 @@ final class SyncCaller {
         }
         if (adapter == null) {
             throw new UnsupportedOperationException("Cannot find an adapter that can convert "
-                    + inputType.getName() + " to pre quality compressed bitmap");
+                    + inputType.getName() + " to pre requestedQuality compressed bitmap");
         }
         return adapter;
     }
@@ -152,57 +155,42 @@ final class SyncCaller {
 
     private static <OutputType, InputType> File doQualityCompress(Request<InputType, OutputType> request,
                                                                   Bitmap downsampledBitmap) throws Throwable {
-        File compressedFile = FileUtil.createOutputFile(SCompressor.sContext);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !request.isArithmeticCoding) {
-            skiaCompress(request, downsampledBitmap, compressedFile);
-        } else {
-            libjpegTurboCompress(request, downsampledBitmap, compressedFile);
-        }
+        boolean hasAlpha = downsampledBitmap.hasAlpha();
+        File compressedFile = FileUtil.createOutputFile(
+                SCompressor.sContext,
+                hasAlpha ? request.withAlpha.suffix() : request.withoutAlpha.suffix()
+        );
+        compressByFormat(
+                downsampledBitmap,
+                hasAlpha ? request.withAlpha : request.withoutAlpha,
+                request.requestedQuality,
+                request.isArithmeticCoding,
+                request.requestedLength,
+                compressedFile
+        );
         return compressedFile;
     }
 
-    private static <OutputType, InputType> void skiaCompress(Request<InputType, OutputType> request,
-                                                             Bitmap downsampledBitmap,
-                                                             File outputFile) throws Throwable {
-        // 1. First compress.
-        int quality = request.quality;
-        do {
-            FileOutputStream fos = new FileOutputStream(outputFile);
-            downsampledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, fos);
-            fos.flush();
-            fos.close();
-            quality -= 10;
-        } while (
-                request.desireOutputFileLength != Request.INVALIDATE &&
-                        outputFile.length() > request.desireOutputFileLength &&
-                        quality > 0
-        );
+    private static void compressByFormat(Bitmap sourceBitmap,
+                                         CompressFormat format,
+                                         int requestedQuality,
+                                         boolean isArithmeticCoding,
+                                         int requestedLength,
+                                         File compressedFile) throws IOException {
+        switch (format) {
+            case WEBP:
+                Core.compressWebp(sourceBitmap, requestedQuality, requestedLength, compressedFile);
+            case PNG:
+                Core.compressPng(sourceBitmap, requestedQuality, requestedLength, compressedFile);
+                break;
+            case JPEG:
+            default:
+                Core.compressJpeg(sourceBitmap, requestedQuality, isArithmeticCoding,
+                        requestedLength, compressedFile);
+                break;
+        }
     }
 
-    private static <OutputType, InputType> void libjpegTurboCompress(Request<InputType, OutputType> request,
-                                                                     Bitmap downsampledBitmap, File outputFile) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // if bitmap config is Hardware, we need convert 2 other type ensure we can fetch bitmap pixels.
-            if (downsampledBitmap.getConfig() == Bitmap.Config.HARDWARE) {
-                downsampledBitmap = downsampledBitmap.copy(Bitmap.Config.ARGB_8888, true);
-            }
-        }
-        int quality = request.quality;
-        do {
-            int compressStatus = nativeCompress(downsampledBitmap, quality,
-                    outputFile.getAbsolutePath(), request.isArithmeticCoding);
-            // Verify compress result.
-            if (compressStatus == 0) {
-                Log.e(TAG, "Compress failed.");
-                throw new RuntimeException("Native quality compress failed.");
-            }
-            quality -= 10;
-        } while (
-                request.desireOutputFileLength != Request.INVALIDATE &&
-                        outputFile.length() > request.desireOutputFileLength &&
-                        quality > 0
-        );
-    }
 
     private static <Target> OutputAdapter<Target> findOutputAdapter(Class<Target> targetType) {
         OutputAdapter<Target> adapter = null;

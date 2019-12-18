@@ -37,28 +37,28 @@ public class Request<InputType, OutputType> {
     final Class<OutputType> outputType;
 
     /**
-     * Compress quality.
+     * Compress requestedQuality.
      */
-    final int quality;
+    final int requestedQuality;
 
     /**
      * Compress out desire width.
      */
     @Dimension(unit = PX)
-    final int destWidth;
+    final int requestedWidth;
 
     /**
      * Compress out desire height
      */
     @Dimension(unit = PX)
-    final int destHeight;
+    final int requestedHeight;
 
     /**
      * Set up desire file length after compressed.
      * <p>
      * Unit is byte.
      */
-    final int desireOutputFileLength;
+    final int requestedLength;
 
     /**
      * Control auto down sample or not.
@@ -74,34 +74,52 @@ public class Request<InputType, OutputType> {
      */
     final boolean isArithmeticCoding;
 
+    /**
+     * Control compressed file type.
+     */
+    CompressFormat withoutAlpha;
+
+    /**
+     * Control compressed file type.
+     */
+    CompressFormat withAlpha;
+
     private Request(
             InputSource<InputType> inputSource,
             Class<OutputType> outputType,
-            int quality,
-            int destWidth,
-            int destHeight,
-            int desireOutputFileLength,
+            int requestedQuality,
+            int requestedWidth,
+            int requestedHeight,
+            int requestedLength,
             boolean isAutoDownsample,
-            boolean isArithmeticCoding) {
+            boolean isArithmeticCoding,
+            CompressFormat withoutAlpha,
+            CompressFormat withAlpha) {
         this.inputSource = inputSource;
         this.outputType = outputType;
-        this.quality = quality;
-        this.destWidth = destWidth;
-        this.destHeight = destHeight;
-        this.desireOutputFileLength = desireOutputFileLength;
+        this.requestedQuality = requestedQuality;
+        this.requestedWidth = requestedWidth;
+        this.requestedHeight = requestedHeight;
+        this.requestedLength = requestedLength;
         this.isAutoDownsample = isAutoDownsample;
         this.isArithmeticCoding = isArithmeticCoding;
+        this.withoutAlpha = withoutAlpha;
+        this.withAlpha = withAlpha;
     }
 
     @Override
     public String toString() {
-        return "SCompressor Request{" +
-                "inputSource = " + inputSource.getType().getSimpleName() +
-                ", outputType = " + outputType.toString() +
-                ", quality = " + quality +
-                ", isAutoDownsample = " + isAutoDownsample +
-                ", destWidth = " + destWidth +
-                ", destHeight = " + destHeight +
+        return "Request{" + "\n" +
+                "inputSource=" + inputSource.getType().getName() + "\n" +
+                ", outputType=" + outputType + "\n" +
+                ", requestedQuality=" + requestedQuality + "\n" +
+                ", requestedWidth=" + requestedWidth + "\n" +
+                ", requestedHeight=" + requestedHeight + "\n" +
+                ", requestedLength=" + requestedLength + "\n" +
+                ", isAutoDownsample=" + isAutoDownsample + "\n" +
+                ", isArithmeticCoding=" + isArithmeticCoding + "\n" +
+                ", withoutAlpha=" + withoutAlpha.name() + "\n" +
+                ", withAlpha=" + withAlpha.name() + "\n" +
                 '}';
     }
 
@@ -119,12 +137,14 @@ public class Request<InputType, OutputType> {
 
         private InputSource inputSource;
         private Class outputType = DEFAULT_OUTPUT_TYPE;
-        private int quality = DEFAULT_QUALITY;
-        private int desireWidth = INVALIDATE;
-        private int desireHeight = INVALIDATE;
-        private int desireOutputFileLength = INVALIDATE;
+        private int requestedQuality = DEFAULT_QUALITY;
+        private int requestedWidth = INVALIDATE;
+        private int requestedHeight = INVALIDATE;
+        private int requestedLength = INVALIDATE;
         private boolean isAutoDownSample = true;
         private boolean isArithmeticCoding = false;
+        private CompressFormat withoutAlpha = CompressFormat.JPEG;
+        private CompressFormat withAlpha = CompressFormat.PNG;
 
         Builder() {
 
@@ -132,20 +152,24 @@ public class Request<InputType, OutputType> {
 
         private Builder(InputSource inputSource,
                         Class outputSource,
-                        int quality,
-                        int desireWidth,
-                        int desireHeight,
-                        int desireOutputFileLength,
+                        int requestedQuality,
+                        int requestedWidth,
+                        int requestedHeight,
+                        int requestedLength,
                         boolean isAutoDownSample,
-                        boolean isArithmeticCoding) {
+                        boolean isArithmeticCoding,
+                        CompressFormat withoutAlpha,
+                        CompressFormat withAlpha) {
             this.inputSource = inputSource;
             this.outputType = outputSource;
-            this.quality = quality;
-            this.desireWidth = desireWidth;
-            this.desireHeight = desireHeight;
-            this.desireOutputFileLength = desireOutputFileLength;
+            this.requestedQuality = requestedQuality;
+            this.requestedWidth = requestedWidth;
+            this.requestedHeight = requestedHeight;
+            this.requestedLength = requestedLength;
             this.isAutoDownSample = isAutoDownSample;
             this.isArithmeticCoding = isArithmeticCoding;
+            this.withoutAlpha = withoutAlpha;
+            this.withAlpha = withAlpha;
         }
 
         /**
@@ -173,22 +197,24 @@ public class Request<InputType, OutputType> {
             return new Builder<>(
                     this.inputSource,
                     outputType,
-                    quality,
-                    desireWidth,
-                    desireHeight,
-                    desireOutputFileLength,
+                    requestedQuality,
+                    requestedWidth,
+                    requestedHeight,
+                    requestedLength,
                     isAutoDownSample,
-                    isArithmeticCoding
+                    isArithmeticCoding,
+                    withoutAlpha,
+                    withAlpha
             );
         }
 
         /**
-         * Set desire output quality when compressing start.
+         * Set desire output requestedQuality when compressing start.
          *
          * @param quality range [0, 100]
          */
         public Builder<InputType, OutputType> setQuality(@IntRange(from = 0, to = 100) int quality) {
-            this.quality = Preconditions.checkRange(quality, 0, 100);
+            this.requestedQuality = Preconditions.checkRange(quality, 0, 100);
             return this;
         }
 
@@ -196,8 +222,8 @@ public class Request<InputType, OutputType> {
          * Set desire output image width and height when compress completed.
          */
         public Builder<InputType, OutputType> setDesireSize(int desireWidth, int desireHeight) {
-            this.desireWidth = desireWidth;
-            this.desireHeight = desireHeight;
+            this.requestedWidth = desireWidth;
+            this.requestedHeight = desireHeight;
             return this;
         }
 
@@ -225,7 +251,25 @@ public class Request<InputType, OutputType> {
          * Unit is byte.
          */
         public Builder<InputType, OutputType> setDesireLength(int desireOutputFileLength) {
-            this.desireOutputFileLength = desireOutputFileLength;
+            this.requestedLength = desireOutputFileLength;
+            return this;
+        }
+
+        /**
+         * Set up output image type.
+         *
+         * @param withoutAlpha u can choose {@link CompressFormat#JPEG}, {@link CompressFormat#PNG}, {@link CompressFormat#WEBP}
+         * @param withAlpha    u can choose {@link CompressFormat#PNG}, {@link CompressFormat#WEBP}
+         */
+        public Builder<InputType, OutputType> setCompressFormat(@NonNull CompressFormat withoutAlpha,
+                                                                @NonNull CompressFormat withAlpha) {
+            Preconditions.checkNotNull(withoutAlpha);
+            Preconditions.checkNotNull(withAlpha);
+            if (withAlpha == CompressFormat.JPEG) {
+                Log.w(TAG, "Image type JPEG will lost alpha channel.");
+            }
+            this.withoutAlpha = withoutAlpha;
+            this.withAlpha = withAlpha;
             return this;
         }
 
@@ -275,12 +319,14 @@ public class Request<InputType, OutputType> {
             return new Builder<>(
                     inputSource,
                     outputType,
-                    quality,
-                    desireWidth,
-                    desireHeight,
-                    desireOutputFileLength,
+                    requestedQuality,
+                    requestedWidth,
+                    requestedHeight,
+                    requestedLength,
                     isAutoDownSample,
-                    isArithmeticCoding
+                    isArithmeticCoding,
+                    withoutAlpha,
+                    withAlpha
             );
         }
 
@@ -317,12 +363,14 @@ public class Request<InputType, OutputType> {
                     new Request<InputType, OutputType>(
                             inputSource,
                             outputType,
-                            quality,
-                            desireWidth,
-                            desireHeight,
-                            desireOutputFileLength,
+                            requestedQuality,
+                            requestedWidth,
+                            requestedHeight,
+                            requestedLength,
                             isAutoDownSample,
-                            isArithmeticCoding
+                            isArithmeticCoding,
+                            withoutAlpha,
+                            withAlpha
                     ),
                     callback
             );
@@ -338,12 +386,14 @@ public class Request<InputType, OutputType> {
                     new Request<InputType, OutputType>(
                             inputSource,
                             outputType,
-                            quality,
-                            desireWidth,
-                            desireHeight,
-                            desireOutputFileLength,
+                            requestedQuality,
+                            requestedWidth,
+                            requestedHeight,
+                            requestedLength,
                             isAutoDownSample,
-                            isArithmeticCoding
+                            isArithmeticCoding,
+                            withoutAlpha,
+                            withAlpha
                     )
             );
         }
