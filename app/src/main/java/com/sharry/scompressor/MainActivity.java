@@ -54,7 +54,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 PickerManager.with(v.getContext())
-                        .setPickerConfig(PickerConfig.Builder().setThreshold(1).build())
+                        .setPickerConfig(PickerConfig.Builder()
+                                .setThreshold(1)
+                                .isPickGif(true)
+                                .build()
+                        )
                         .setLoaderEngine(new ILoaderEngine() {
                             @Override
                             public void loadPicture(@NonNull Context context, @NonNull MediaMeta mediaMeta, @NonNull ImageView imageView) {

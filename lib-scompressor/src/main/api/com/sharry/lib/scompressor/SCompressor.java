@@ -25,19 +25,6 @@ public final class SCompressor {
     static final List<InputAdapter> INPUT_ADAPTERS = new ArrayList<>();
     static final List<OutputAdapter> OUTPUT_ADAPTERS = new ArrayList<>();
 
-    static {
-        // add default input adapters.
-        INPUT_ADAPTERS.add(new InputFilePathAdapter());
-        INPUT_ADAPTERS.add(new InputBitmapAdapter());
-        INPUT_ADAPTERS.add(new InputUriAdapter());
-        // add default output adapters.
-        OUTPUT_ADAPTERS.add(new OutputBitmapAdapter());
-        OUTPUT_ADAPTERS.add(new OutputFilePathAdapter());
-        OUTPUT_ADAPTERS.add(new OutputByteArrayAdapter());
-        OUTPUT_ADAPTERS.add(new OutputUriAdapter());
-        OUTPUT_ADAPTERS.add(new OutputFileAdapter());
-    }
-
     static Context sContext;
     static String sAuthority;
 
@@ -49,6 +36,15 @@ public final class SCompressor {
         Preconditions.checkNotNull(authority, "Please ensure authority non null!");
         sContext = context.getApplicationContext();
         sAuthority = authority;
+        // add default input adapters.
+        addInputAdapter(new InputFilePathAdapter());
+        addInputAdapter(new InputUriAdapter());
+        // add default output adapters.
+        addOutputAdapter(new OutputBitmapAdapter());
+        addOutputAdapter(new OutputFilePathAdapter());
+        addOutputAdapter(new OutputByteArrayAdapter());
+        addOutputAdapter(new OutputUriAdapter());
+        addOutputAdapter(new OutputFileAdapter());
     }
 
     /**

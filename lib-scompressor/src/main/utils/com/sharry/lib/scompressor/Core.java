@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import java.io.FileDescriptor;
+import java.io.InputStream;
 
 /**
  * The core algorithm associated with picture compress.
@@ -16,18 +17,17 @@ final class Core {
 
     private static final int INVALIDATE = -1;
 
-    static int calculateSampleSize(FileDescriptor fd) {
+    static int calculateSampleSize(InputStream fd) {
         return calculateSampleSize(fd, INVALIDATE, INVALIDATE);
     }
 
-    static int calculateSampleSize(FileDescriptor fd, int destWidth, int destHeight) {
-        int[] dimensions = getDimensions(fd);
-        return (destWidth == INVALIDATE || destHeight == INVALIDATE) ?
-                calculateSampleSize(fd, dimensions[0], dimensions[1]) :
+    static int calculateSampleSize(InputStream is, int destWidth, int destHeight) {
+        int[] dimensions = getDimensions(is);
+        return (destWidth == INVALIDATE || destHeight == INVALIDATE) ? calculateAutoSampleSize(dimensions[0], dimensions[1]) :
                 calculateSampleSize(dimensions[0], dimensions[1], destWidth, destHeight);
     }
 
-    static int calculateSampleSize(int srcWidth, int srcHeight) {
+    static int calculateAutoSampleSize(int srcWidth, int srcHeight) {
         srcWidth = srcWidth % 2 == 1 ? srcWidth + 1 : srcWidth;
         srcHeight = srcHeight % 2 == 1 ? srcHeight + 1 : srcHeight;
 
@@ -79,10 +79,10 @@ final class Core {
         return powerOfTwoSampleSize;
     }
 
-    static int[] getDimensions(FileDescriptor fd) {
+    static int[] getDimensions(InputStream is) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFileDescriptor(fd, null, options);
+        BitmapFactory.decodeStream(is, null, options);
         options.inJustDecodeBounds = false;
         return new int[]{options.outWidth, options.outHeight};
     }
