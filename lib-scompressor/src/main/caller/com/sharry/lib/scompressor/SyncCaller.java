@@ -178,7 +178,6 @@ final class SyncCaller {
         }
     }
 
-
     private static <Target> OutputAdapter<Target> findOutputAdapter(Class<Target> targetType) {
         OutputAdapter<Target> adapter = null;
         for (OutputAdapter current : SCompressor.OUTPUT_ADAPTERS) {

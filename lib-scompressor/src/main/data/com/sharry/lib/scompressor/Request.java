@@ -77,12 +77,12 @@ public class Request<InputType, OutputType> {
     /**
      * Control compressed file type.
      */
-    CompressFormat withoutAlpha;
+    final CompressFormat withoutAlpha;
 
     /**
      * Control compressed file type.
      */
-    CompressFormat withAlpha;
+    final CompressFormat withAlpha;
 
     private Request(
             InputSource<InputType> inputSource,
@@ -129,14 +129,15 @@ public class Request<InputType, OutputType> {
      * @param <InputType>
      * @param <OutputType>
      */
+    @SuppressWarnings("all")
     public static class Builder<InputType, OutputType> {
 
         private static final int DEFAULT_QUALITY = 75;
         private static final Class DEFAULT_OUTPUT_TYPE = File.class;
         private static final int INVALIDATE = -1;
 
-        private InputSource inputSource;
-        private Class outputType = DEFAULT_OUTPUT_TYPE;
+        private InputSource<InputType> inputSource;
+        private Class<OutputType> outputType = DEFAULT_OUTPUT_TYPE;
         private int requestedQuality = DEFAULT_QUALITY;
         private int requestedWidth = INVALIDATE;
         private int requestedHeight = INVALIDATE;
@@ -150,26 +151,20 @@ public class Request<InputType, OutputType> {
 
         }
 
-        private Builder(InputSource inputSource,
-                        Class outputSource,
-                        int requestedQuality,
-                        int requestedWidth,
-                        int requestedHeight,
-                        int requestedLength,
-                        boolean isAutoDownsample,
-                        boolean isArithmeticCoding,
-                        CompressFormat withoutAlpha,
-                        CompressFormat withAlpha) {
-            this.inputSource = inputSource;
-            this.outputType = outputSource;
-            this.requestedQuality = requestedQuality;
-            this.requestedWidth = requestedWidth;
-            this.requestedHeight = requestedHeight;
-            this.requestedLength = requestedLength;
-            this.isAutoDownsample = isAutoDownsample;
-            this.isArithmeticCoding = isArithmeticCoding;
-            this.withoutAlpha = withoutAlpha;
-            this.withAlpha = withAlpha;
+        <NewInputType, NewOutputType> Builder newBuilder(InputSource<NewInputType> newInputSource,
+                                                         Class<NewOutputType> newOutputType) {
+            Builder result = new Builder();
+            result.inputSource = newInputSource;
+            result.outputType = newOutputType;
+            result.requestedQuality = requestedQuality;
+            result.requestedWidth = requestedWidth;
+            result.requestedHeight = requestedHeight;
+            result.requestedLength = requestedLength;
+            result.isAutoDownsample = isAutoDownsample;
+            result.isArithmeticCoding = isArithmeticCoding;
+            result.withoutAlpha = withoutAlpha;
+            result.withAlpha = withAlpha;
+            return result;
         }
 
         /**
@@ -182,31 +177,20 @@ public class Request<InputType, OutputType> {
          */
         public <NewInputType> Builder<NewInputType, OutputType> setInputSource(@NonNull final NewInputType inputSource) {
             Preconditions.checkNotNull(inputSource);
-            this.inputSource = new InputSource() {
+            InputSource<NewInputType> newInputSource = new InputSource<NewInputType>() {
                 @NonNull
                 @Override
-                public Class getType() {
-                    return inputSource.getClass();
+                public Class<NewInputType> getType() {
+                    return (Class<NewInputType>) inputSource.getClass();
                 }
 
                 @NonNull
                 @Override
-                public Object getSource() {
+                public NewInputType getSource() {
                     return inputSource;
                 }
             };
-            return new Builder<>(
-                    this.inputSource,
-                    outputType,
-                    requestedQuality,
-                    requestedWidth,
-                    requestedHeight,
-                    requestedLength,
-                    isAutoDownsample,
-                    isArithmeticCoding,
-                    withoutAlpha,
-                    withAlpha
-            );
+            return newBuilder(newInputSource, outputType);
         }
 
         /**
@@ -312,23 +296,11 @@ public class Request<InputType, OutputType> {
         /**
          * Set u custom output source.
          *
-         * @param outputType desc output data source.
+         * @param newOutputType desc output data source.
          */
-        public <NewOutputType> Builder<InputType, NewOutputType> as(Class<NewOutputType> outputType) {
-            Preconditions.checkNotNull(outputType);
-            this.outputType = outputType;
-            return new Builder<>(
-                    inputSource,
-                    outputType,
-                    requestedQuality,
-                    requestedWidth,
-                    requestedHeight,
-                    requestedLength,
-                    isAutoDownsample,
-                    isArithmeticCoding,
-                    withoutAlpha,
-                    withAlpha
-            );
+        public <NewOutputType> Builder<InputType, NewOutputType> as(Class<NewOutputType> newOutputType) {
+            Preconditions.checkNotNull(newOutputType);
+            return newBuilder(inputSource, newOutputType);
         }
 
         /**
@@ -361,7 +333,7 @@ public class Request<InputType, OutputType> {
             Preconditions.checkNotNull(callback);
             Preconditions.checkNotNull(inputSource);
             SCompressor.asyncCall(
-                    new Request<InputType, OutputType>(
+                    new Request<>(
                             inputSource,
                             outputType,
                             requestedQuality,
@@ -384,7 +356,7 @@ public class Request<InputType, OutputType> {
         public OutputType syncCall() {
             Preconditions.checkNotNull(inputSource);
             return SCompressor.syncCall(
-                    new Request<InputType, OutputType>(
+                    new Request<>(
                             inputSource,
                             outputType,
                             requestedQuality,
