@@ -99,21 +99,22 @@ final class SyncCaller {
 
     private static <OutputType, InputType> Bitmap handleOtherInputType(Request<InputType, OutputType> request) throws Throwable {
         // 1. Adapter inputSource 2 FileDescriptor.
-        InputStream originIs = findInputAdapter(request.inputSource.getType())
+        InputStream is = findInputAdapter(request.inputSource.getType())
                 .adapt(SCompressor.sContext, SCompressor.sAuthority, request.inputSource);
         // 2. with input stream for this fd.
-        InputStream wrapperIs = new RecyclableBufferedInputStream(originIs, sArrayPool);
+        if (!is.markSupported()) {
+            is = new RecyclableBufferedInputStream(is, sArrayPool);
+        }
         // 3. Ensure color channel.
         BitmapFactory.Options options = new BitmapFactory.Options();
-        wrapperIs.mark(HEADER_MARK_POSITION);     // mark start.
-        options.inPreferredConfig = ImageUtil.hasAlpha(wrapperIs) ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
-        wrapperIs.reset();                        // reset
+        is.mark(HEADER_MARK_POSITION);     // mark start.
+        options.inPreferredConfig = ImageUtil.hasAlpha(is) ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
+        is.reset();                        // reset
         // 4. Ensure sample size.
         options.inJustDecodeBounds = true;
-        wrapperIs.mark(DECODE_MARK_POSITION);     // mark start.
-        BitmapFactory.decodeStream(wrapperIs, null, options);
-        wrapperIs.reset();                        // reset
-        Log.e("TAG", "width is " + options.outWidth + ", height is " + options.outHeight);
+        is.mark(DECODE_MARK_POSITION);     // mark start.
+        BitmapFactory.decodeStream(is, null, options);
+        is.reset();                        // reset
         options.inJustDecodeBounds = false;
         // calculate sample size.
         if (request.requestedWidth == Request.INVALIDATE || request.requestedHeight == Request.INVALIDATE) {
@@ -126,11 +127,10 @@ final class SyncCaller {
             options.inSampleSize = Core.calculateSampleSize(options.outWidth, options.outHeight,
                     request.requestedWidth, request.requestedHeight);
         }
-        Log.i(TAG, "options.inSampleSize is " + options.inSampleSize);
         // 5. Do Neighbour down sampling compress
-        Bitmap result = BitmapFactory.decodeStream(wrapperIs, null, options);
+        Bitmap result = BitmapFactory.decodeStream(is, null, options);
         // close the stream.
-        wrapperIs.close();
+        is.close();
         return result;
     }
 
