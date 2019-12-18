@@ -87,23 +87,33 @@ final class SyncCaller {
      * 5MB. This is the max image header size we can handle, we preallocate a much smaller buffer but
      * will resize up to this amount if necessary.
      */
-    private static final int MARK_POSITION = 5 * 1024 * 1024;
+    private static final int HEADER_MARK_POSITION = 5 * 1024 * 1024;
+
+    /**
+     * Thanks for Glide.
+     * <p>
+     * 10MB. This is the max image header size we can handle, we preallocate a much smaller buffer
+     * but will resize up to this amount if necessary.
+     */
+    private static final int DECODE_MARK_POSITION = 10 * 1024 * 1024;
 
     private static <OutputType, InputType> Bitmap handleOtherInputType(Request<InputType, OutputType> request) throws Throwable {
         // 1. Adapter inputSource 2 FileDescriptor.
         InputStream originIs = findInputAdapter(request.inputSource.getType())
                 .adapt(SCompressor.sContext, SCompressor.sAuthority, request.inputSource);
-        // 2. create input stream for this fd.
+        // 2. with input stream for this fd.
         InputStream wrapperIs = new RecyclableBufferedInputStream(originIs, sArrayPool);
-        wrapperIs.mark(MARK_POSITION);  // mark start.
         // 3. Ensure color channel.
         BitmapFactory.Options options = new BitmapFactory.Options();
+        wrapperIs.mark(HEADER_MARK_POSITION);     // mark start.
         options.inPreferredConfig = ImageUtil.hasAlpha(wrapperIs) ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
-        wrapperIs.reset();             // back to start.
+        wrapperIs.reset();                        // reset
         // 4. Ensure sample size.
         options.inJustDecodeBounds = true;
+        wrapperIs.mark(DECODE_MARK_POSITION);     // mark start.
         BitmapFactory.decodeStream(wrapperIs, null, options);
-        wrapperIs.reset();              // back to start.
+        wrapperIs.reset();                        // reset
+        Log.e("TAG", "width is " + options.outWidth + ", height is " + options.outHeight);
         options.inJustDecodeBounds = false;
         // calculate sample size.
         if (request.requestedWidth == Request.INVALIDATE || request.requestedHeight == Request.INVALIDATE) {

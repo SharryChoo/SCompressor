@@ -19,6 +19,7 @@ import com.sharry.lib.album.PickerCallback;
 import com.sharry.lib.album.PickerConfig;
 import com.sharry.lib.album.PickerManager;
 import com.sharry.lib.scompressor.CompressFormat;
+import com.sharry.lib.scompressor.ICompressorCallbackLambda;
 import com.sharry.lib.scompressor.SCompressor;
 
 import java.io.File;
@@ -44,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         SCompressor.init(this, "com.sharry.scompressor.FileProvider");
         initViews();
-
     }
 
     private void initViews() {
@@ -89,20 +89,12 @@ public class MainActivity extends AppCompatActivity {
     private void doCompress(MediaMeta mediaMeta) {
         Log.e(TAG, "Origin file length is " + new File(mediaMeta.getPath()).length() / 1024 + "kb");
         // SCompressor 压缩
-        File destFile = performCompressBySCompressor(mediaMeta.getContentUri());
-        Bitmap bitmap = BitmapFactory.decodeFile(destFile.getAbsolutePath());
-        mIvScompressorCompressed.setImageBitmap(bitmap);
-    }
-
-    private File performCompressBySCompressor(Object inputSource) {
-        long startTime = System.currentTimeMillis();
-        File file = SCompressor.create()
+        final long startTime = System.currentTimeMillis();
+        SCompressor.with(mediaMeta.getContentUri())
                 // 使用自动降采样
                 .setAutoDownsample(true)
                 // 使用算术编码
                 .setArithmeticCoding(false)
-                // 输入源
-                .setInputSource(inputSource)
                 // 压缩后的期望大小
                 .setDesireLength(1000 * 500)
                 // 压缩质量
@@ -116,15 +108,20 @@ public class MainActivity extends AppCompatActivity {
                 )
                 // 转为目标类型
                 .asFile()
-                // 同步调用
-                .syncCall();
-        long endTime = System.currentTimeMillis();
-        Log.e(
-                TAG,
-                "SCompressor compressed file length is " + (file.length() / 1024) + "kb, " +
-                        "cost time is " + (endTime - startTime) + "ms"
-        );
-        return file;
+                // 异步调用
+                .asyncCall(new ICompressorCallbackLambda<File>() {
+                    @Override
+                    public void onComplete(@NonNull File compressedData) {
+                        long endTime = System.currentTimeMillis();
+                        Log.e(
+                                TAG,
+                                "SCompressor compressed file length is " + (compressedData.length() / 1024) + "kb, " +
+                                        "cost time is " + (endTime - startTime) + "ms"
+                        );
+                        Bitmap bitmap = BitmapFactory.decodeFile(compressedData.getAbsolutePath());
+                        mIvScompressorCompressed.setImageBitmap(bitmap);
+                    }
+                });
     }
 
 }

@@ -1,4 +1,6 @@
-package com.sharry.lib.scompressor.recycleable;/*
+package com.sharry.lib.scompressor.recycleable;
+
+/*
  *  Licensed to the Apache Software Foundation (ASF) under one or more
  *  contributor license agreements.  See the NOTICE file distributed with
  *  this work for additional information regarding copyright ownership.
@@ -15,6 +17,7 @@ package com.sharry.lib.scompressor.recycleable;/*
  *  limitations under the License.
  */
 
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -37,7 +40,6 @@ import java.io.InputStream;
  * </pre>
  */
 public class RecyclableBufferedInputStream extends FilterInputStream {
-
     /**
      * The buffer containing the current bytes read from the target InputStream.
      */
@@ -63,18 +65,18 @@ public class RecyclableBufferedInputStream extends FilterInputStream {
      * The current position within the byte array {@code buf}.
      */
     private int pos;
-    private final ArrayPool byteArrayPool;
+    private final ByteArrayPool byteArrayPool;
 
-    public RecyclableBufferedInputStream(@NonNull InputStream in, @NonNull ArrayPool byteArrayPool) {
-        this(in, byteArrayPool, ArrayPool.STANDARD_BUFFER_SIZE_BYTES);
+    public RecyclableBufferedInputStream(@NonNull InputStream in, @NonNull ByteArrayPool byteArrayPool) {
+        this(in, byteArrayPool, ByteArrayPool.STANDARD_BUFFER_SIZE_BYTES);
     }
 
     @VisibleForTesting
-    RecyclableBufferedInputStream(@NonNull InputStream in, @NonNull ArrayPool byteArrayPool,
+    public RecyclableBufferedInputStream(@NonNull InputStream in, @NonNull ByteArrayPool byteArrayPool,
                                   int bufferSize) {
         super(in);
         this.byteArrayPool = byteArrayPool;
-        buf = byteArrayPool.get(bufferSize, byte[].class);
+        buf = byteArrayPool.get(bufferSize);
     }
 
     /**
@@ -164,7 +166,7 @@ public class RecyclableBufferedInputStream extends FilterInputStream {
             if (newLength > marklimit) {
                 newLength = marklimit;
             }
-            byte[] newbuf = byteArrayPool.get(newLength, byte[].class);
+            byte[] newbuf = byteArrayPool.get(newLength);
             System.arraycopy(localBuf, 0, newbuf, 0, localBuf.length);
             byte[] oldbuf = localBuf;
             // Reassign buf, which will invalidate any local references
@@ -417,5 +419,4 @@ public class RecyclableBufferedInputStream extends FilterInputStream {
             super(detailMessage);
         }
     }
-
 }

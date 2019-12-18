@@ -2,13 +2,14 @@ package com.sharry.lib.scompressor;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.sharry.lib.BuildConfig;
-import com.sharry.lib.scompressor.recycleable.ArrayPool;
-import com.sharry.lib.scompressor.recycleable.LruArrayPool;
+import com.sharry.lib.scompressor.recycleable.ByteArrayPool;
+import com.sharry.lib.scompressor.recycleable.LruByteArrayPool;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ public final class SCompressor {
 
     static Context sContext;
     static String sAuthority;
-    static ArrayPool sArrayPool;
+    static ByteArrayPool sArrayPool;
 
     /**
      * Init usable Dir, helper generate temp file.
@@ -39,7 +40,7 @@ public final class SCompressor {
         Preconditions.checkNotNull(authority, "Please ensure authority non null!");
         sContext = context.getApplicationContext();
         sAuthority = authority;
-        sArrayPool = new LruArrayPool();
+        sArrayPool = new LruByteArrayPool();
         // add default input adapters.
         addInputAdapter(new InputFilePathAdapter());
         addInputAdapter(new InputUriAdapter());
@@ -67,16 +68,34 @@ public final class SCompressor {
         OUTPUT_ADAPTERS.add(adapter);
     }
 
-    public static void replaceArrayPool(ArrayPool arrayPool) {
+    public static void replaceArrayPool(ByteArrayPool arrayPool) {
         sArrayPool = arrayPool;
     }
 
     /**
      * Get an instance of Request.Builder
+     * Set u custom input source.
+     *
+     * @param inputSource desc input source. Current support
+     *                    Origin Bitmap {@link Bitmap},
+     *                    File Path {@link String},
+     *                    File Uri {@link Uri}
      */
     @NonNull
-    public static Request.Builder<Bitmap, File> create() {
-        return new Request.Builder<>();
+    public static <InputType> Request.Builder<InputType, File> with(final InputType inputSource) {
+        return new Request.Builder<>(new InputSource<InputType>() {
+            @NonNull
+            @Override
+            public Class<InputType> getType() {
+                return (Class<InputType>) inputSource.getClass();
+            }
+
+            @NonNull
+            @Override
+            public InputType getSource() {
+                return inputSource;
+            }
+        });
     }
 
     /**

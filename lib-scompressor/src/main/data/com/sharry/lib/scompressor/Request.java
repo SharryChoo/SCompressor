@@ -136,7 +136,7 @@ public class Request<InputType, OutputType> {
         private static final Class DEFAULT_OUTPUT_TYPE = File.class;
         private static final int INVALIDATE = -1;
 
-        private InputSource<InputType> inputSource;
+        private final InputSource<InputType> inputSource;
         private Class<OutputType> outputType = DEFAULT_OUTPUT_TYPE;
         private int requestedQuality = DEFAULT_QUALITY;
         private int requestedWidth = INVALIDATE;
@@ -147,14 +147,14 @@ public class Request<InputType, OutputType> {
         private CompressFormat withoutAlpha = CompressFormat.JPEG;
         private CompressFormat withAlpha = CompressFormat.PNG;
 
-        Builder() {
-
+        public Builder(@NonNull InputSource<InputType> newInputSource) {
+            Preconditions.checkNotNull(newInputSource);
+            this.inputSource = newInputSource;
         }
 
         <NewInputType, NewOutputType> Builder newBuilder(InputSource<NewInputType> newInputSource,
                                                          Class<NewOutputType> newOutputType) {
-            Builder result = new Builder();
-            result.inputSource = newInputSource;
+            Builder result = new Builder(newInputSource);
             result.outputType = newOutputType;
             result.requestedQuality = requestedQuality;
             result.requestedWidth = requestedWidth;
@@ -165,32 +165,6 @@ public class Request<InputType, OutputType> {
             result.withoutAlpha = withoutAlpha;
             result.withAlpha = withAlpha;
             return result;
-        }
-
-        /**
-         * Set u custom input source.
-         *
-         * @param inputSource desc input source. Current support
-         *                    Origin Bitmap {@link Bitmap},
-         *                    File Path {@link String},
-         *                    File Uri {@link Uri}
-         */
-        public <NewInputType> Builder<NewInputType, OutputType> setInputSource(@NonNull final NewInputType inputSource) {
-            Preconditions.checkNotNull(inputSource);
-            InputSource<NewInputType> newInputSource = new InputSource<NewInputType>() {
-                @NonNull
-                @Override
-                public Class<NewInputType> getType() {
-                    return (Class<NewInputType>) inputSource.getClass();
-                }
-
-                @NonNull
-                @Override
-                public NewInputType getSource() {
-                    return inputSource;
-                }
-            };
-            return newBuilder(newInputSource, outputType);
         }
 
         /**
@@ -313,13 +287,12 @@ public class Request<InputType, OutputType> {
             asyncCall(new ICompressorCallback<OutputType>() {
                 @Override
                 public void onSuccess(@NonNull OutputType compressedData) {
-                    lambdaCallback.onComplete(true, compressedData);
+                    lambdaCallback.onComplete(compressedData);
                 }
 
                 @Override
                 public void onFailed(@NonNull Throwable e) {
                     Log.e(TAG, e.getMessage(), e);
-                    lambdaCallback.onComplete(false, null);
                 }
             });
         }

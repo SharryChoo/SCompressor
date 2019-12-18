@@ -51,7 +51,7 @@ final class AsyncCaller {
     }
 
     /**
-     * The holder associated with create CompressExecutorPool instance.
+     * The holder associated with with CompressExecutorPool instance.
      */
     private static final class InstanceHolder {
 
