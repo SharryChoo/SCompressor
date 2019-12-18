@@ -3,7 +3,6 @@ package com.sharry.lib.scompressor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-import java.io.FileDescriptor;
 import java.io.InputStream;
 
 /**
@@ -14,18 +13,6 @@ import java.io.InputStream;
  * @since 4/11/2019 4:53 PM
  */
 final class Core {
-
-    private static final int INVALIDATE = -1;
-
-    static int calculateSampleSize(InputStream fd) {
-        return calculateSampleSize(fd, INVALIDATE, INVALIDATE);
-    }
-
-    static int calculateSampleSize(InputStream is, int destWidth, int destHeight) {
-        int[] dimensions = getDimensions(is);
-        return (destWidth == INVALIDATE || destHeight == INVALIDATE) ? calculateAutoSampleSize(dimensions[0], dimensions[1]) :
-                calculateSampleSize(dimensions[0], dimensions[1], destWidth, destHeight);
-    }
 
     static int calculateAutoSampleSize(int srcWidth, int srcHeight) {
         srcWidth = srcWidth % 2 == 1 ? srcWidth + 1 : srcWidth;
@@ -74,17 +61,9 @@ final class Core {
         final float totalPixels = srcWidth * srcHeight;
         final float desirePixels = destWidth * destHeight << 1;
         while (totalPixels / (powerOfTwoSampleSize * powerOfTwoSampleSize) > desirePixels) {
-            powerOfTwoSampleSize++;
+            powerOfTwoSampleSize = powerOfTwoSampleSize << 1;
         }
         return powerOfTwoSampleSize;
-    }
-
-    static int[] getDimensions(InputStream is) {
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeStream(is, null, options);
-        options.inJustDecodeBounds = false;
-        return new int[]{options.outWidth, options.outHeight};
     }
 
     ////////////////// native method /////////////////////

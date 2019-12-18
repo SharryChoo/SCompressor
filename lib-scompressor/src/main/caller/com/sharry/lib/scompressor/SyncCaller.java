@@ -105,22 +105,28 @@ final class SyncCaller {
                 .adapt(SCompressor.sContext, SCompressor.sAuthority, request.inputSource);
         // 2. create input stream for this fd.
         InputStream is = new BufferedInputStream(new FileInputStream(fd));
+        // mark start.
         is.mark(MARK_POSITION);
         // 3. Ensure color channel.
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = ImageUtil.hasAlpha(is) ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
-        is.reset();
+        is.reset(); // back to start.
         // 4. Ensure sample size.
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(is, null, options);
+        is.reset(); // back to start.
+        options.inJustDecodeBounds = false;
+        // calculate sample size.
         if (request.destWidth == Request.INVALIDATE || request.destHeight == Request.INVALIDATE) {
             if (request.isAutoDownsample) {
-                options.inSampleSize = calculateSampleSize(is);
+                options.inSampleSize = Core.calculateAutoSampleSize(options.outWidth, options.outHeight);
             } else {
                 Log.i(TAG, "Do not need down sample");
             }
         } else {
-            options.inSampleSize = calculateSampleSize(is, request.destWidth, request.destHeight);
+            options.inSampleSize = Core.calculateSampleSize(options.outWidth, options.outHeight,
+                    request.destWidth, request.destHeight);
         }
-        is.reset();
         Log.i(TAG, "options.inSampleSize is " + options.inSampleSize);
         // 5. Do Neighbour down sampling compress
         Bitmap result = BitmapFactory.decodeStream(is, null, options);
