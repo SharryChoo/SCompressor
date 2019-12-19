@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = SCompressor.class.getSimpleName();
 
     private Button mBtnPicker;
-    private ImageView mIvScompressorCompressed;
+    private ImageView mIvCompressed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViews() {
         mBtnPicker = findViewById(R.id.btn_picker);
-        mIvScompressorCompressed = findViewById(R.id.iv_compressed);
+        mIvCompressed = findViewById(R.id.iv_compressed);
         mBtnPicker = findViewById(R.id.btn_picker);
         mBtnPicker.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,17 +62,17 @@ public class MainActivity extends AppCompatActivity {
                         .setLoaderEngine(new ILoaderEngine() {
                             @Override
                             public void loadPicture(@NonNull Context context, @NonNull MediaMeta mediaMeta, @NonNull ImageView imageView) {
-                                Glide.with(context).load(mediaMeta.getContentUri()).into(imageView);
+                                Glide.with(context).asBitmap().load(mediaMeta.getContentUri()).into(imageView);
                             }
 
                             @Override
                             public void loadGif(@NonNull Context context, @NonNull MediaMeta mediaMeta, @NonNull ImageView imageView) {
-
+                                Glide.with(context).asGif().load(mediaMeta.getContentUri()).into(imageView);
                             }
 
                             @Override
                             public void loadVideoThumbnails(@NonNull Context context, @NonNull MediaMeta mediaMeta, @NonNull ImageView imageView) {
-
+                                Glide.with(context).asBitmap().load(mediaMeta.getContentUri()).into(imageView);
                             }
                         })
                         .start(new PickerCallback() {
@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                         long endTime = System.currentTimeMillis();
                         Log.e(TAG, "cost time is " + (endTime - startTime) + "ms");
                         Bitmap compressedBitmap = BitmapFactory.decodeFile(compressedData.getAbsolutePath());
-                        mIvScompressorCompressed.setImageBitmap(compressedBitmap);
+                        mIvCompressed.setImageBitmap(compressedBitmap);
                     }
                 });
     }

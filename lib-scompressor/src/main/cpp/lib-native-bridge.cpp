@@ -60,7 +60,6 @@ Java_com_sharry_lib_scompressor_Core_nativeCompress(JNIEnv *env, jclass type, jo
     return result;
 }
 
-
 void cvtABGR8888ToRGB888(void *src, uchar *dst, int rows, int cols) {
     int *pixels = static_cast<int *>(src);
     uchar r, g, b;
