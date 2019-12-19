@@ -110,16 +110,16 @@ public class Request<InputType, OutputType> {
     @Override
     public String toString() {
         return "Request{" + "\n" +
-                "inputSource=" + inputSource + "\n" +
-                ", outputType=" + outputType + "\n" +
-                ", requestedQuality=" + requestedQuality + "\n" +
-                ", requestedWidth=" + requestedWidth + "\n" +
-                ", requestedHeight=" + requestedHeight + "\n" +
-                ", requestedLength=" + requestedLength + "\n" +
-                ", isAutoDownsample=" + isAutoDownsample + "\n" +
-                ", isArithmeticCoding=" + isArithmeticCoding + "\n" +
-                ", withoutAlpha=" + withoutAlpha.name() + "\n" +
-                ", withAlpha=" + withAlpha.name() + "\n" +
+                "inputSource=" + inputSource.getType() + ", \n" +
+                "outputType=" + outputType + ", \n" +
+                "requestedQuality=" + requestedQuality + ", \n" +
+                "requestedWidth=" + requestedWidth + ", \n" +
+                "requestedHeight=" + requestedHeight + ", \n" +
+                "requestedLength=" + requestedLength + ", \n" +
+                "isAutoDownsample=" + isAutoDownsample + ", \n" +
+                "isArithmeticCoding=" + isArithmeticCoding + ", \n" +
+                "withoutAlpha=" + withoutAlpha.name() + ", \n" +
+                "withAlpha=" + withAlpha.name() + ", \n" +
                 '}';
     }
 
