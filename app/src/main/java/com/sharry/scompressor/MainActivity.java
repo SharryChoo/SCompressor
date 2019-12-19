@@ -95,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
                 .setArithmeticCoding(true)
                 // 压缩后期望的文件大小, 单位 byte
                 .setDesireLength(500 * 1024)
+                .setDesireSize(1080, 1920)
                 // 压缩质量
                 .setQuality(50)
                 // 设置压缩后文件输出类型

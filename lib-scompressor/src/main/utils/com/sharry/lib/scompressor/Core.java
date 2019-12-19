@@ -19,59 +19,39 @@ import static com.sharry.lib.scompressor.SCompressor.TAG;
  */
 final class Core {
 
+    private final static int DEFAULT_SAMPLE_WIDTH = 1080;
+    private final static int DEFAULT_SAMPLE_HEIGHT = 1920;
+
     // ///////////////////////////////// Down sampler //////////////////////////////////////
 
     static int calculateAutoSampleSize(int sourceWidth, int sourceHeight) {
-        sourceWidth = sourceWidth % 2 == 1 ? sourceWidth + 1 : sourceWidth;
-        sourceHeight = sourceHeight % 2 == 1 ? sourceHeight + 1 : sourceHeight;
-
-        int longSide = Math.max(sourceWidth, sourceHeight);
-        int shortSide = Math.min(sourceWidth, sourceHeight);
-
-        float scale = ((float) shortSide / longSide);
-        if (scale <= 1 && scale > 0.5625) {
-            if (longSide < 1664) {
-                return 1;
-            } else if (longSide >= 1664 && longSide < 4990) {
-                return 2;
-            } else if (longSide > 4990 && longSide < 10240) {
-                return 4;
-            } else {
-                return longSide / 1280 == 0 ? 1 : longSide / 1280;
-            }
-        } else if (scale <= 0.5625 && scale > 0.5) {
-            return longSide / 1280 == 0 ? 1 : longSide / 1280;
-        } else {
-            return (int) Math.ceil(longSide / (1280.0 / scale));
-        }
+        return calculateSampleSize(sourceWidth, sourceHeight, DEFAULT_SAMPLE_WIDTH, DEFAULT_SAMPLE_HEIGHT);
     }
 
     static int calculateSampleSize(int sourceWidth, int sourceHeight, int requestedWidth, int requestedHeight) {
-        if (sourceWidth < requestedWidth && sourceHeight < requestedHeight) {
+        // Fetch source long side and short side.
+        int sourceLongSide = Math.max(sourceWidth, sourceHeight);
+        int sourceShortSide = Math.min(sourceWidth, sourceHeight);
+        // Fetch requested long side and short side.
+        int requestLongSide = Math.max(requestedWidth, requestedHeight);
+        int requestShortSide = Math.min(requestedWidth, requestedHeight);
+        if (sourceLongSide < requestLongSide && sourceShortSide < requestShortSide) {
             return 1;
         }
         // 1. Calculate exact factor.
-        double exactScaleFactor = Math.max((float) requestedWidth / (float) sourceWidth,
-                (float) requestedHeight / (float) sourceHeight);
-        // 2. Calculate scale factor.
-        int outWidth = (int) Math.round(exactScaleFactor * sourceWidth);
-        int outHeight = (int) Math.round(exactScaleFactor * sourceHeight);
-        int widthScaleFactor = sourceWidth / outWidth;
-        int heightScaleFactor = sourceHeight / outHeight;
-        int scaleFactor = Math.max(widthScaleFactor, heightScaleFactor);
+        float exactScaleFactor = Math.min(requestLongSide / (float) sourceLongSide,
+                requestShortSide / (float) sourceShortSide);
+
+        // 2. Calculate int scale factor.
+        int outShortSide = (int) (exactScaleFactor * sourceShortSide + 0.5f); // round to int
+        int outLongSide = (int) (exactScaleFactor * sourceLongSide + 0.5f);   // round to int
+        // Math.min will large than requestSize.
+        int scaleFactor = Math.min(sourceShortSide / outShortSide, sourceLongSide / outLongSide);
+
         // 3. Calculate sample size.(convert scaleFactor to 2 power.)
-        int powerOfTwoSampleSize = Math.max(1, Integer.highestOneBit(scaleFactor));
-        if (powerOfTwoSampleSize < (1.f / exactScaleFactor)) {
-            powerOfTwoSampleSize = powerOfTwoSampleSize << 1;
-        }
-        // 4. Adjust weird picture.
-        final float totalPixels = sourceWidth * sourceHeight;
-        final float desirePixels = requestedWidth * requestedHeight << 1;
-        while (totalPixels / (powerOfTwoSampleSize * powerOfTwoSampleSize) > desirePixels) {
-            powerOfTwoSampleSize = powerOfTwoSampleSize << 1;
-        }
-        return powerOfTwoSampleSize;
+        return Math.max(1, Integer.highestOneBit(scaleFactor));
     }
+
     // ///////////////////////////////// Quality compress //////////////////////////////////////
 
     static void compressJpeg(Bitmap sourceBitmap, int requestedQuality, boolean isArithmeticCoding,
