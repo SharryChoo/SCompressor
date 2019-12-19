@@ -15,6 +15,7 @@ LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/main/jniLibs/armeabi-v7a)
 
 # 对文件集合取变量
 FILE(GLOB SRC_LIST "${PROJECT_SOURCE_DIR}/src/main/cpp/*.cpp")
+
 # 添加要打包的资源
 ADD_LIBRARY(
         # 打包后的库名称
@@ -31,7 +32,6 @@ TARGET_LINK_LIBRARIES(
         scompressor
         # 外部链接库
         jpeg
-        turbojpeg
         # Anroid libs
         jnigraphics
         log

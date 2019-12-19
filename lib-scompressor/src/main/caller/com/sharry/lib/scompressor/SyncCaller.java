@@ -25,7 +25,7 @@ import static com.sharry.lib.scompressor.SCompressor.sIsDebug;
 final class SyncCaller {
 
     static <InputType, OutputType> OutputType execute(Request<InputType, OutputType> request) throws Throwable {
-        if (BuildConfig.DEBUG) {
+        if (sIsDebug) {
             Log.e(TAG, request.toString());
         }
         // 1. Do down sample

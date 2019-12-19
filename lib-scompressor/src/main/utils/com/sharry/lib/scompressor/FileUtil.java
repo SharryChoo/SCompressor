@@ -20,7 +20,7 @@ import java.util.Locale;
  * @version 1.0
  * @since 2018/9/22 17:39
  */
-class FileUtil {
+final class FileUtil {
 
 
     /**

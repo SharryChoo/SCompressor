@@ -12,6 +12,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static com.sharry.lib.scompressor.SCompressor.sIsDebug;
+
 /**
  * Compress runnable.
  *
@@ -78,7 +80,9 @@ final class AsyncCaller {
                 new RejectedExecutionHandler() {
                     @Override
                     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-                        Log.e(TAG, "Task rejected, too many task!");
+                        if (sIsDebug) {
+                            Log.e(TAG, "Task rejected, too many task!");
+                        }
                     }
                 }
         );

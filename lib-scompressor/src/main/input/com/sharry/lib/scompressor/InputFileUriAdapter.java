@@ -8,13 +8,13 @@ import androidx.annotation.NonNull;
 import java.io.InputStream;
 
 /**
- * Adapter bitmap 2 temp file.
+ * Adapter uri 2 input stream.
  *
  * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
  * @version 1.0
  * @since 2019-06-12 14:29
  */
-public class InputUriAdapter implements InputAdapter<Uri> {
+public class InputFileUriAdapter implements InputAdapter<Uri> {
 
     @Override
     public InputStream adapt(Context context, String authority, @NonNull InputSource<Uri> inputSource) throws Throwable {

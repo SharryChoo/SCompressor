@@ -87,16 +87,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doCompress(MediaMeta mediaMeta) {
-        Log.e(TAG, "Origin file length is " + new File(mediaMeta.getPath()).length() / 1024 + "kb");
         // SCompressor 压缩
         final long startTime = System.currentTimeMillis();
-        SCompressor.with(mediaMeta.getContentUri())
+        SCompressor.with(mediaMeta.getPath())
                 // 使用自动降采样
                 .setAutoDownsample(true)
                 // 使用算术编码
-                .setArithmeticCoding(false)
-                // 压缩后的期望大小
-                .setDesireLength(1000 * 500)
+                .setArithmeticCoding(true)
+                // 压缩后期望的文件大小, 单位 byte
+                .setDesireLength(500 * 1024)
                 // 压缩质量
                 .setQuality(50)
                 // 设置压缩后文件输出类型
@@ -113,13 +112,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull File compressedData) {
                         long endTime = System.currentTimeMillis();
-                        Log.e(
-                                TAG,
-                                "SCompressor compressed file length is " + (compressedData.length() / 1024) + "kb, " +
-                                        "cost time is " + (endTime - startTime) + "ms"
-                        );
-                        Bitmap bitmap = BitmapFactory.decodeFile(compressedData.getAbsolutePath());
-                        mIvScompressorCompressed.setImageBitmap(bitmap);
+                        Log.e(TAG, "cost time is " + (endTime - startTime) + "ms");
+                        Bitmap compressedBitmap = BitmapFactory.decodeFile(compressedData.getAbsolutePath());
+                        mIvScompressorCompressed.setImageBitmap(compressedBitmap);
                     }
                 });
     }

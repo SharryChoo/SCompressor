@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -48,7 +49,7 @@ public final class SCompressor {
         // add default input adapters.
         sInputAdapters = new ArrayList<>();
         sInputAdapters.add(new InputFilePathAdapter());
-        sInputAdapters.add(new InputUriAdapter());
+        sInputAdapters.add(new InputFileUriAdapter());
         // add default output adapters.
         sOutputAdapters = new ArrayList<>();
         sOutputAdapters.add(new OutputBitmapAdapter());
@@ -150,8 +151,8 @@ public final class SCompressor {
         try {
             output = SyncCaller.execute(request);
         } catch (Throwable throwable) {
-            if (BuildConfig.DEBUG) {
-                throwable.printStackTrace();
+            if (sIsDebug) {
+                Log.e(TAG, throwable.getMessage(), throwable);
             }
         }
         return output;
