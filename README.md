@@ -13,7 +13,7 @@ A framework that help u compress picture more easier.(Core is [libjpeg-turbo 2.0
   - Current support: JPEG, PNG, WEBP
 
 ---
-## Current Version 
+## Current Version
 [![](https://jitpack.io/v/SharryChoo/SCompressor.svg)](https://jitpack.io/#SharryChoo/SCompressor)
 
 ---
