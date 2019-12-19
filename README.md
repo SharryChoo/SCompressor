@@ -2,8 +2,6 @@
 ## About
 A framework that help u compress picture more easier.(Core is [libjpeg-turbo 2.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/2.0.2))
 
-[中文文档](https://sharrychoo.github.io/blog/android/2019/06/17/Android-%E5%9B%BE%E7%89%87%E5%8E%8B%E7%BC%A9%E6%A1%86%E6%9E%B6-SCompressor.html)
-
 ---
 ## Current Version 
 [![](https://jitpack.io/v/SharryChoo/SCompressor.svg)](https://jitpack.io/#SharryChoo/SCompressor)
@@ -35,145 +33,97 @@ dependencies {
 ### Initialize
 Initialize at application create.
 ```
-SCompressor.init(this);
+SCompressor.init(this, authority);
 ```
+- this: Application Context
+- authority: help framework find URI for giving path.
 
 ### Setup input source
 ```
-// 1. Support file path.
-SCompressor.create()
-       // set file path.
-       .setInputPath(inputPath)
+// inject input data source
+SCompressor.with(xxx)
        ......
-});
-
-// 2. Support bitmap
-SCompressor.create()
-       // set origin bitmap.
-       .setInputBitmap(originBitmap)
-       ......
-});
-
-// 3. Support custom input source.
-SCompressor.create()
-       // custom input source
-       .setInputSource(new DataSource<Object>() {
-           @NonNull
-           @Override
-           public Class<Object> getType() {
-                return null;
-           }
-
-           @Nullable
-           @Override
-           public Object getSource() {
-               return null;
-           }
-       })
-       ......
-});
 ```
-Use input file path can get nice efficiency.
+Framework default support input source such as: **Bitmap, String(file path), URI(file uri)**
 
-If u custom input source, u need implement InputAdapter and add it.
+If u pass other input data source, u need implement InputAdapter and invoke SCompressor.addInputAdapter. 
 
 ### Setup options
 ```
-SCompressor.create()
-        .setInputPath(url)
+SCompressor.with(xxx)
         // range of 0 ~ 100.
         .setQuality(70)
         // set desire output size.
         .setDesireSize(500, 1000)
         // default is true: If u don't set desire size, it will auto down sample.
         .setAutoDownSample(true)
+        // if true will use arithmetic coding when compress jpeg
+        // the compress ratio will higher 10% than Huffman 
+        .setArithmeticCoding(true)
+        // Set target length after compress to file.
+        .setDesireLength(500 * 1024)
+        // Set target file type
+        .setCompressFormat(
+             // Config without alpha channel
+             CompressFormat.JPEG,
+             // Config with alpha channel
+             CompressFormat.WEBP
+        )
         ......
 ```
 
-### Setup output source
+### Assign output type
 ```
-// 1. Support config output path.
-SCompressor.create()
-        .setInputPath(inputPath)
-        .setQuality(70)
-        .setOutputPath(outputPath)
+SCompressor.with(xxx)
+        // options
         ......
-        
-// 2. Support output bitmap
-SCompressor.create()
-        .setInputPath(inputPath)
-        .setQuality(70)
+        // support output type
         .asBitmap()
-        ......
-        
-// 3. Support output byte array
-SCompressor.create()
-        .setInputPath(inputPath)
-        .setQuality(70)
         .asByteArray()
+        .asUri()
+        .asFilePath()
+        .asFile()
+        // Other outputSource
+        .as(Class<?>)
         ......
-        
-// 3. Support custom output source.
-SCompressor.create()
-        .setInputPath(inputPath)
-        .setQuality(70)
-        // custom output source
-        .setOutputSource(new DataSource<Object>() {
-           @NonNull
-           @Override
-           public Class<Object> getType() {
-                return null;
-           }
-
-           @Nullable
-           @Override
-           public Object getSource() {
-               return null;
-           }
-       })
-        ......        
 ```
-The default output source is file path.
+SCompressor default support output type have: **Bitmap, byte[], Uri, String(file path), File** 
 
-If u custom output source, u need implement OuputAdapter and add it.
+If u custom output source, u need implement OutputAdapter and invoke add it.
 
 ### Asynchronous Call
 ```
 // normal async call.
-SCompressor.create()
-        .setInputPath(inputPath)
+SCompressor.with(xxx)
         .setQuality(70)
         .asBitmap()
         .asyncCall(new CompressCallback<Bitmap>() {
             @Override
             public void onSuccess(@NonNull Bitmap compressedData) {
-                // ......
+                // it will callback on UI Thread
             }
 
             @Override
             public void onFailed(@NonNull Throwable e) {
-                // ......
+                // it will callback on UI Thread
             }
         });
         
 // lambda async call.
-SCompressor.create()
-        .setInputPath(inputPath)
+SCompressor.with(xxx)
         .setQuality(70)
         .asBitmap()
         .asyncCall(new CompressCallbackLambda<Bitmap>() {
             @Override
-            public void onCompressComplete(boolean isSuccess, @Nullable Bitmap compressedData) {
-                 if (isSuccess) {
-                      ......// if isSuccess, the compressedData non null.
-                 }
+            public void onCompressComplete(@NonNull Bitmap compressedData) {
+                 // it will callback on UI Thread
             }
         });
 ```
 
 ### Synchronous call
 ```
-Bitmap bitmap = SCompressor.create()
+Bitmap bitmap = SCompressor.with(xxx)
         .setInputPath(inputPath)
         .setQuality(70)
         .asBitmap()
@@ -183,51 +133,53 @@ Bitmap bitmap = SCompressor.create()
 ### Other 
 If u use custom input or output source, U need implement Writer or Adapter and add it.
 
-#### InputWriter
+#### InputAdapter
+Adapter u assigned special input source to InputStream.
 ```
-// Define Input Adapter
-InputWriter<Object> myInputAdapter = new InputWriter<Object>() {
-     @Override
-     String writeToDisk(@NonNull DataSource<InputType> inputSource) throws Throwable {
-         // Request: u can fetch everything from request.
-         // inputData: u need write this image data 2 disk.
-         return null;
-     }
+// Implementation Input Adapter
+public class InputFileUriAdapter implements InputAdapter<Uri> {
 
-     @Override
-     public boolean isWriter(@NonNull Class adaptedType) {
-          // Ensure this Adapter field.
-          return Object.class.getName().equals(adaptedType.getName());
-     }
-};
+    @Override
+    public InputStream adapt(Context context, String authority, @NonNull InputSource<Uri> inputSource) throws Throwable {
+        return context.getContentResolver().openInputStream(inputSource.getSource());
+    }
+
+    @Override
+    public boolean isAdapter(@NonNull Class adaptedType) {
+        return Uri.class.isAssignableFrom(adaptedType);
+    }
+
+}
 
 // Add to scompressor.
-SCompressor.addInputAdapter(myInputAdapter);
+SCompressor.addInputAdapter(new InputFileUriAdapter());
 ```
 
 #### OutputAdapter
+Adapter compressed file to u desire outputType
 ```
-OutputAdapter<Object> myOutputAdapter = new OutputAdapter<Object>() {
-     @Override
-     public Object adapt(@NonNull File compressedFile) {
-         // compressedFile: this file is compressed output file, u need adapt it to u desire obj.
-         return null;
-     }
+// Implementation Output Adapter
+public class OutputFilePathAdapter implements OutputAdapter<String> {
+    @Override
+    public String adapt(Context context, String authority, @NonNull File compressedFile) {
+        return compressedFile.getAbsolutePath();
+    }
 
-     @Override
-     public boolean isAdapter(@NonNull Class adaptedType) {
-          // Ensure this Adapter field.
-          return Object.class.getName().equals(adaptedType.getName());
-     }
-};
+    @Override
+    public boolean isAdapter(@NonNull Class adaptedType) {
+        return adaptedType.getName().equals(String.class.getName());
+    }
+}
+
 
 // Add to scompressor.
 SCompressor.addOutputAdapter(myOutputAdapter);
 ```
 ---
+
 ## License
 ```
-Copyright 2019 drakeet.
+Copyright 2019 SharryChoo.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
