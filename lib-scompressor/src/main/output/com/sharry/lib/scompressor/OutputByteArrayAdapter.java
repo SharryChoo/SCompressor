@@ -1,5 +1,7 @@
 package com.sharry.lib.scompressor;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import java.io.ByteArrayOutputStream;
@@ -18,7 +20,7 @@ import java.io.IOException;
 public class OutputByteArrayAdapter implements OutputAdapter<byte[]> {
 
     @Override
-    public byte[] adapt(@NonNull File compressedFile) {
+    public byte[] adapt(Context context, String authority, @NonNull File compressedFile) {
         return getBytes(compressedFile);
     }
 

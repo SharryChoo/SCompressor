@@ -362,7 +362,7 @@ struct jpeg_compress_struct {
   int num_scans;                /* # of entries in scan_info array */
   const jpeg_scan_info *scan_info; /* script for multi-scan file, or NULL */
   /* The default value of scan_info is NULL, which causes a single-scan
-   * sequential JPEG file to be emitted.  To create a multi-scan file,
+   * sequential JPEG file to be emitted.  To with a multi-scan file,
    * set num_scans and scan_info to point to an array of scan definitions.
    */
 

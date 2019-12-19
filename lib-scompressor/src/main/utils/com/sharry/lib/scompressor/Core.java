@@ -1,12 +1,14 @@
 package com.sharry.lib.scompressor;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.media.ExifInterface;
+import android.os.Build;
+import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+
+import static com.sharry.lib.scompressor.SCompressor.TAG;
 
 /**
  * The core algorithm associated with picture compress.
@@ -17,25 +19,14 @@ import java.io.IOException;
  */
 final class Core {
 
-    private static final int INVALIDATE = -1;
+    // ///////////////////////////////// Down sampler //////////////////////////////////////
 
-    static int calculateSampleSize(String filePath) {
-        return calculateSampleSize(filePath, INVALIDATE, INVALIDATE);
-    }
+    static int calculateAutoSampleSize(int sourceWidth, int sourceHeight) {
+        sourceWidth = sourceWidth % 2 == 1 ? sourceWidth + 1 : sourceWidth;
+        sourceHeight = sourceHeight % 2 == 1 ? sourceHeight + 1 : sourceHeight;
 
-    static int calculateSampleSize(String filePath, int destWidth, int destHeight) {
-        int[] dimensions = getDimensions(filePath);
-        return (destWidth == INVALIDATE || destHeight == INVALIDATE) ?
-                calculateSampleSize(dimensions[0], dimensions[1]) :
-                calculateSampleSize(dimensions[0], dimensions[1], destWidth, destHeight);
-    }
-
-    static int calculateSampleSize(int srcWidth, int srcHeight) {
-        srcWidth = srcWidth % 2 == 1 ? srcWidth + 1 : srcWidth;
-        srcHeight = srcHeight % 2 == 1 ? srcHeight + 1 : srcHeight;
-
-        int longSide = Math.max(srcWidth, srcHeight);
-        int shortSide = Math.min(srcWidth, srcHeight);
+        int longSide = Math.max(sourceWidth, sourceHeight);
+        int shortSide = Math.min(sourceWidth, sourceHeight);
 
         float scale = ((float) shortSide / longSide);
         if (scale <= 1 && scale > 0.5625) {
@@ -55,18 +46,18 @@ final class Core {
         }
     }
 
-    static int calculateSampleSize(int srcWidth, int srcHeight, int destWidth, int destHeight) {
-        if (srcWidth < destWidth && srcHeight < destHeight) {
+    static int calculateSampleSize(int sourceWidth, int sourceHeight, int requestedWidth, int requestedHeight) {
+        if (sourceWidth < requestedWidth && sourceHeight < requestedHeight) {
             return 1;
         }
         // 1. Calculate exact factor.
-        double exactScaleFactor = Math.max((float) destWidth / (float) srcWidth,
-                (float) destHeight / (float) srcHeight);
+        double exactScaleFactor = Math.max((float) requestedWidth / (float) sourceWidth,
+                (float) requestedHeight / (float) sourceHeight);
         // 2. Calculate scale factor.
-        int outWidth = (int) Math.round(exactScaleFactor * srcWidth);
-        int outHeight = (int) Math.round(exactScaleFactor * srcHeight);
-        int widthScaleFactor = srcWidth / outWidth;
-        int heightScaleFactor = srcHeight / outHeight;
+        int outWidth = (int) Math.round(exactScaleFactor * sourceWidth);
+        int outHeight = (int) Math.round(exactScaleFactor * sourceHeight);
+        int widthScaleFactor = sourceWidth / outWidth;
+        int heightScaleFactor = sourceHeight / outHeight;
         int scaleFactor = Math.max(widthScaleFactor, heightScaleFactor);
         // 3. Calculate sample size.(convert scaleFactor to 2 power.)
         int powerOfTwoSampleSize = Math.max(1, Integer.highestOneBit(scaleFactor));
@@ -74,55 +65,74 @@ final class Core {
             powerOfTwoSampleSize = powerOfTwoSampleSize << 1;
         }
         // 4. Adjust weird picture.
-        final float totalPixels = srcWidth * srcHeight;
-        final float desirePixels = destWidth * destHeight << 1;
+        final float totalPixels = sourceWidth * sourceHeight;
+        final float desirePixels = requestedWidth * requestedHeight << 1;
         while (totalPixels / (powerOfTwoSampleSize * powerOfTwoSampleSize) > desirePixels) {
-            powerOfTwoSampleSize++;
+            powerOfTwoSampleSize = powerOfTwoSampleSize << 1;
         }
         return powerOfTwoSampleSize;
     }
+    // ///////////////////////////////// Quality compress //////////////////////////////////////
 
-    static int readImageRotateAngle(String imagePath) throws IOException {
-        int degree = 0;
-        ExifInterface exifInterface = new ExifInterface(imagePath);
-        int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-        switch (orientation) {
-            case ExifInterface.ORIENTATION_ROTATE_90:
-                degree = 90;
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_180:
-                degree = 180;
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_270:
-                degree = 270;
-                break;
-            default:
-                break;
+    static void compressJpeg(Bitmap sourceBitmap, int requestedQuality, boolean isArithmeticCoding,
+                             int requestedLength, File compressedFile) throws IOException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !isArithmeticCoding) {
+            compressBySkia(sourceBitmap, requestedQuality, requestedLength, compressedFile, Bitmap.CompressFormat.JPEG);
+        } else {
+            compressByLibjpegTurbo(sourceBitmap, requestedQuality, isArithmeticCoding, requestedLength, compressedFile);
         }
-        return degree;
     }
 
-    static Bitmap rotateBitmap(Bitmap bitmap, int angle) {
-        if (angle == 0) {
-            return bitmap;
+    static void compressPng(Bitmap sourceBitmap, int requestedQuality,
+                            int requestedLength, File compressedFile) throws IOException {
+        compressBySkia(sourceBitmap, requestedQuality, requestedLength, compressedFile, Bitmap.CompressFormat.PNG);
+    }
+
+    static void compressWebp(Bitmap sourceBitmap, int requestedQuality,
+                             int requestedLength, File compressedFile) throws IOException {
+        compressBySkia(sourceBitmap, requestedQuality, requestedLength, compressedFile, Bitmap.CompressFormat.WEBP);
+    }
+
+    static void compressBySkia(Bitmap sourceBitmap, int quality,
+                               int requestedLength, File compressedFile,
+                               Bitmap.CompressFormat compressFormat) throws IOException {
+        do {
+            FileOutputStream fos = new FileOutputStream(compressedFile);
+            sourceBitmap.compress(compressFormat, quality, fos);
+            fos.flush();
+            fos.close();
+            quality -= 10;
+        } while (
+                requestedLength != Request.INVALIDATE &&
+                        compressedFile.length() > requestedLength &&
+                        quality > 0
+        );
+    }
+
+    private static void compressByLibjpegTurbo(Bitmap sourceBitmap, int requestedQuality,
+                                               boolean isArithmeticCoding,
+                                               int requestedLength, File compressedFile) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // if bitmap config is Hardware, we need convert 2 other type ensure we can fetch bitmap pixels.
+            if (sourceBitmap.getConfig() == Bitmap.Config.HARDWARE) {
+                sourceBitmap = sourceBitmap.copy(Bitmap.Config.ARGB_8888, true);
+            }
         }
-        // Build rotate matrix
-        Matrix matrix = new Matrix();
-        matrix.postRotate(angle);
-        // return rotated Bitmap
-        return Bitmap.createBitmap(bitmap, 0, 0,
-                bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        do {
+            int compressStatus = nativeCompress(sourceBitmap, requestedQuality,
+                    compressedFile.getAbsolutePath(), isArithmeticCoding);
+            // Verify compress result.
+            if (compressStatus == 0) {
+                Log.e(TAG, "Compress failed.");
+                throw new RuntimeException("Native requestedQuality compress failed.");
+            }
+            requestedQuality -= 10;
+        } while (requestedLength != Request.INVALIDATE &&
+                compressedFile.length() > requestedLength &&
+                requestedQuality > 0);
     }
 
-    static int[] getDimensions(String imagePath) {
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(imagePath, options);
-        options.inJustDecodeBounds = false;
-        return new int[]{options.outWidth, options.outHeight};
-    }
-
-    ////////////////// native method /////////////////////
+    // ///////////////////////////////// Native method //////////////////////////////////////
 
     static {
         System.loadLibrary("scompressor");

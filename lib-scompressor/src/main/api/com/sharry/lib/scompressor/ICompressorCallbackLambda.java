@@ -1,6 +1,7 @@
 package com.sharry.lib.scompressor;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
 
 /**
  * 图片压缩任务的回调
@@ -14,9 +15,9 @@ public interface ICompressorCallbackLambda<Output> {
     /**
      * Called when compress task complete
      *
-     * @param isSuccess      if true is success, false is failed.
      * @param compressedData isSuccess is true it will nonnull, false is null.
      */
-    void onComplete(boolean isSuccess, @Nullable Output compressedData);
+    @MainThread
+    void onComplete(@NonNull Output compressedData);
 
 }

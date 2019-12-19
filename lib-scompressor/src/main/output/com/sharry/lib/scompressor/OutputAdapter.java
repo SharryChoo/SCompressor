@@ -1,5 +1,7 @@
 package com.sharry.lib.scompressor;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import java.io.File;
@@ -18,10 +20,12 @@ public interface OutputAdapter<OutputType> {
     /**
      * Adapter compressed file path 2 output type.
      *
+     * @param context        Android Application Context
+     * @param authority      FileProvider Authority
      * @param compressedFile the compressed file path.
      * @return user desire type.
      */
-    OutputType adapt(@NonNull File compressedFile);
+    OutputType adapt(Context context, String authority, @NonNull File compressedFile);
 
     /**
      * Is can adapter 2 target type.

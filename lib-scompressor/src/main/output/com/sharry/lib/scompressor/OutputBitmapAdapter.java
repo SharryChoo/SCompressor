@@ -1,5 +1,6 @@
 package com.sharry.lib.scompressor;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
@@ -17,7 +18,7 @@ import java.io.File;
 public class OutputBitmapAdapter implements OutputAdapter<Bitmap> {
 
     @Override
-    public Bitmap adapt(@NonNull File compressedFile) {
+    public Bitmap adapt(Context context, String authority, @NonNull File compressedFile) {
         // Convert 2 bitmap
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?

@@ -1,5 +1,6 @@
 package com.sharry.lib.scompressor;
 
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 
 /**
@@ -16,10 +17,14 @@ public interface ICompressorCallback<Output> {
      *
      * @param compressedData result is true it will nonnull, false is null.
      */
+    @MainThread
     void onSuccess(@NonNull Output compressedData);
 
     /**
      * Called when compress failed
+     *
+     * @param e the error info when compressing.
      */
+    @MainThread
     void onFailed(@NonNull Throwable e);
 }

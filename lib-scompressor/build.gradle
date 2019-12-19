@@ -21,8 +21,8 @@ android {
         main {
             java.srcDirs += 'src/main/api'
             java.srcDirs += 'src/main/data'
-            java.srcDirs += 'src/main/adapter'
-            java.srcDirs += 'src/main/writer'
+            java.srcDirs += 'src/main/output'
+            java.srcDirs += 'src/main/input'
             java.srcDirs += 'src/main/caller'
             java.srcDirs += 'src/main/utils'
         }
@@ -43,4 +43,5 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$supportLibraryVersion"
+    implementation 'com.github.bumptech.glide:glide:4.6.1'
 }

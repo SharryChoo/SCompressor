@@ -1,42 +1,56 @@
 package com.sharry.lib.scompressor;
 
+import android.content.Context;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.text.format.DateFormat;
+
+import androidx.core.content.FileProvider;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Locale;
 
 /**
- * @author Sharry <a href="xiaoyu.zhu@1hai.cn">Contact me.</a>
+ * 处理文件相关的工具类
+ *
+ * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
  * @version 1.0
- * @since 2019-09-29 14:07
+ * @since 2018/9/22 17:39
  */
 final class FileUtil {
 
-    private static final String SUFFIX_JPEG = ".jpg";
-    private static final String UNSUSPECTED_FILE_PREFIX = "SCompressor_";
 
-    static File createUnsuspectedFile() throws IOException {
-        File tempFile = new File(
-                Preconditions.checkNotNull(SCompressor.sUsableDir, "If U not set output path, " +
-                        "Please invoke SCompressor.init config an usable directory."),
-                UNSUSPECTED_FILE_PREFIX + System.currentTimeMillis() + SUFFIX_JPEG
-        );
-        if (tempFile.exists()) {
-            tempFile.delete();
-        }
-        tempFile.createNewFile();
-        return tempFile;
+    /**
+     * 获取 URI
+     */
+    static Uri getUriFromFile(Context context, String authority, File file) {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ?
+                FileProvider.getUriForFile(context, authority, file) : Uri.fromFile(file);
     }
 
-    static File createFile(String filePath) throws IOException {
-        File file = new File(filePath);
-        if (file.exists()) {
-            file.delete();
-        } else {
-            File dir = file.getParentFile();
-            if (!dir.exists()) {
-                dir.mkdirs();
+    /**
+     * 创建输出文件
+     *
+     * @return 创建的文件
+     */
+    static File createOutputFile(Context context, String suffix) {
+        // 获取文件目录
+        File tempDirectory = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        // 创建压缩文件
+        String fileName = "compress_" + DateFormat.format("yyyyMMdd_HH_mm_ss",
+                Calendar.getInstance(Locale.CHINA)) + suffix;
+        File file = new File(tempDirectory, fileName);
+        try {
+            if (file.exists()) {
+                file.delete();
             }
+            file.createNewFile();
+        } catch (IOException e) {
+            // ignore.
         }
-        file.createNewFile();
         return file;
     }
 

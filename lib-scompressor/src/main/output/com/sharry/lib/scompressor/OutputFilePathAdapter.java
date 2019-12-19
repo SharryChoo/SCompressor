@@ -1,5 +1,7 @@
 package com.sharry.lib.scompressor;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import java.io.File;
@@ -13,7 +15,7 @@ import java.io.File;
  */
 public class OutputFilePathAdapter implements OutputAdapter<String> {
     @Override
-    public String adapt(@NonNull File compressedFile) {
+    public String adapt(Context context, String authority, @NonNull File compressedFile) {
         return compressedFile.getAbsolutePath();
     }
 

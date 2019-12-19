@@ -1,7 +1,6 @@
 package com.sharry.lib.scompressor;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * The description of data.
@@ -10,7 +9,7 @@ import androidx.annotation.Nullable;
  * @version 1.0
  * @since 4/2/2019 11:04 AM
  */
-public interface DataSource<SourceType> {
+public interface InputSource<SourceType> {
 
     /**
      * Get generic SourceType class.
@@ -23,9 +22,9 @@ public interface DataSource<SourceType> {
     /**
      * Get an input source.
      *
-     * @return an instance of generic SourceType type(will be null).
+     * @return an instance of generic SourceType Object(will be null).
      */
-    @Nullable
+    @NonNull
     SourceType getSource();
 
 }

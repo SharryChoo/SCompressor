@@ -19,7 +19,7 @@
 
 /*
  * To define the enum list of message codes, include this file without
- * defining macro JMESSAGE.  To create a message string table, include it
+ * defining macro JMESSAGE.  To with a message string table, include it
  * again with a suitable JMESSAGE definition (see jerror.c for an example).
  */
 #ifndef JMESSAGE
@@ -123,7 +123,7 @@ JMESSAGE(JERR_SOF_NO_SOS, "Invalid JPEG file structure: missing SOS marker")
 JMESSAGE(JERR_SOF_UNSUPPORTED, "Unsupported JPEG process: SOF type 0x%02x")
 JMESSAGE(JERR_SOI_DUPLICATE, "Invalid JPEG file structure: two SOI markers")
 JMESSAGE(JERR_SOS_NO_SOF, "Invalid JPEG file structure: SOS before SOF")
-JMESSAGE(JERR_TFILE_CREATE, "Failed to create temporary file %s")
+JMESSAGE(JERR_TFILE_CREATE, "Failed to with temporary file %s")
 JMESSAGE(JERR_TFILE_READ, "Read failed on temporary file")
 JMESSAGE(JERR_TFILE_SEEK, "Seek failed on temporary file")
 JMESSAGE(JERR_TFILE_WRITE,
