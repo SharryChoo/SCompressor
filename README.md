@@ -177,6 +177,10 @@ SCompressor.addOutputAdapter(myOutputAdapter);
 ```
 ---
 
+## Thanks
+- [Glide](https://github.com/bumptech/glide)
+- [libjpeg-turbo 2.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/2.0.2)
+
 ## License
 ```
 Copyright 2019 SharryChoo.
