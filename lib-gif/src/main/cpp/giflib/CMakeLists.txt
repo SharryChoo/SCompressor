@@ -2,7 +2,11 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.4.1)
 
 # 对文件集合取变量
-FILE(GLOB GIF_SRC_LIST "${PROJECT_SOURCE_DIR}/src/main/cpp/giflib/core/*.c" "${PROJECT_SOURCE_DIR}/src/main/cpp/giflib/util/*.c")
+FILE(
+        GLOB GIF_SRC_LIST
+        "${PROJECT_SOURCE_DIR}/src/main/cpp/giflib/core/*.c"
+        "${PROJECT_SOURCE_DIR}/src/main/cpp/giflib/util/*.c"
+)
 
 # 添加要打包的资源
 ADD_LIBRARY(
