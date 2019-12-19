@@ -1,7 +1,5 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
 
-group = 'com.github.SharryChoo'
 android {
     compileSdkVersion rootProject.compileSdkVersion
     defaultConfig {
@@ -17,30 +15,14 @@ android {
             }
         }
     }
-    sourceSets {
-        main {
-            java.srcDirs += 'src/main/api'
-            java.srcDirs += 'src/main/data'
-            java.srcDirs += 'src/main/output'
-            java.srcDirs += 'src/main/input'
-            java.srcDirs += 'src/main/caller'
-            java.srcDirs += 'src/main/utils'
-        }
-    }
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
         }
     }
-    sourceSets {
-        main {
-            jniLibs.srcDirs = ['src/main/jniLibs']
-        }
-    }
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "androidx.appcompat:appcompat:$supportLibraryVersion"
-    implementation project(':lib-gif')
 }
