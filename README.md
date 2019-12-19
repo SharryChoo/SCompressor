@@ -30,7 +30,7 @@ dependencies {
 
 ---
 ## How to use
-### Initialize
+### 1. Initialize
 Initialize at application create.
 ```
 SCompressor.init(this, authority);
@@ -38,17 +38,17 @@ SCompressor.init(this, authority);
 - this: Application Context
 - authority: help framework find URI for giving path.
 
-### Setup input source
+### 2. Setup input source
 ```
 // inject input data source
 SCompressor.with(xxx)
        ......
 ```
-Framework default support input source such as: **Bitmap, String(file path), URI(file uri)**
+Framework default support input source have: **Bitmap, String(file path), URI(file uri)**
 
 If u pass other input data source, u need implement InputAdapter and invoke SCompressor.addInputAdapter. 
 
-### Setup options
+### 3. Setup options
 ```
 SCompressor.with(xxx)
         // range of 0 ~ 100.
@@ -72,7 +72,7 @@ SCompressor.with(xxx)
         ......
 ```
 
-### Assign output type
+### 4. Assign output type
 ```
 SCompressor.with(xxx)
         // options
@@ -91,7 +91,8 @@ SCompressor default support output type have: **Bitmap, byte[], Uri, String(file
 
 If u custom output source, u need implement OutputAdapter and invoke add it.
 
-### Asynchronous Call
+### 5. Call
+#### 5.1 Asynchronous Call
 ```
 // normal async call.
 SCompressor.with(xxx)
@@ -120,8 +121,7 @@ SCompressor.with(xxx)
             }
         });
 ```
-
-### Synchronous call
+#### 5.2 Synchronous call
 ```
 Bitmap bitmap = SCompressor.with(xxx)
         .setInputPath(inputPath)
@@ -130,10 +130,10 @@ Bitmap bitmap = SCompressor.with(xxx)
         .syncCall()
 ```
 
-### Other 
+### 6. Other 
 If u use custom input or output source, U need implement Writer or Adapter and add it.
 
-#### InputAdapter
+#### 6.1 InputAdapter
 Adapter u assigned special input source to InputStream.
 ```
 // Implementation Input Adapter
@@ -155,7 +155,7 @@ public class InputFileUriAdapter implements InputAdapter<Uri> {
 SCompressor.addInputAdapter(new InputFileUriAdapter());
 ```
 
-#### OutputAdapter
+#### 6.2 OutputAdapter
 Adapter compressed file to u desire outputType
 ```
 // Implementation Output Adapter
