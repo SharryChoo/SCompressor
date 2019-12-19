@@ -3,6 +3,16 @@
 A framework that help u compress picture more easier.(Core is [libjpeg-turbo 2.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/2.0.2))
 
 ---
+## Feature
+- Support custom input source.
+- Support custom output type.
+- Support JPEG arithmetic coding.
+  - Arithmetic coding compress ratio will higher 10% than Huffman coding.
+- Support dynamic detect file alpha channel.
+- Support assign output file type
+  - Current support: JPEG, PNG, WEBP
+
+---
 ## Current Version 
 [![](https://jitpack.io/v/SharryChoo/SCompressor.svg)](https://jitpack.io/#SharryChoo/SCompressor)
 
