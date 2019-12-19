@@ -1,5 +1,6 @@
 package com.sharry.lib.scompressor;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -25,50 +26,70 @@ import java.util.List;
 public final class SCompressor {
 
     static final String TAG = SCompressor.class.getSimpleName();
-    static final List<InputAdapter> INPUT_ADAPTERS = new ArrayList<>();
-    static final List<OutputAdapter> OUTPUT_ADAPTERS = new ArrayList<>();
 
+    @SuppressLint("StaticFieldLeak")
     static Context sContext;
     static String sAuthority;
     static ByteArrayPool sArrayPool;
+    static List<InputAdapter> sInputAdapters;
+    static List<OutputAdapter> sOutputAdapters;
+    static boolean sIsDebug = BuildConfig.DEBUG;
+    private static boolean sHasInit = false;
 
     /**
      * Init usable Dir, helper generate temp file.
      */
-    public static void init(@NonNull Context context, String authority) {
+    public static synchronized void init(@NonNull Context context, String authority) {
         Preconditions.checkNotNull(context, "Please ensure context non null!");
         Preconditions.checkNotNull(authority, "Please ensure authority non null!");
         sContext = context.getApplicationContext();
         sAuthority = authority;
         sArrayPool = new LruByteArrayPool();
         // add default input adapters.
-        addInputAdapter(new InputFilePathAdapter());
-        addInputAdapter(new InputUriAdapter());
+        sInputAdapters = new ArrayList<>();
+        sInputAdapters.add(new InputFilePathAdapter());
+        sInputAdapters.add(new InputUriAdapter());
         // add default output adapters.
-        addOutputAdapter(new OutputBitmapAdapter());
-        addOutputAdapter(new OutputFilePathAdapter());
-        addOutputAdapter(new OutputByteArrayAdapter());
-        addOutputAdapter(new OutputUriAdapter());
-        addOutputAdapter(new OutputFileAdapter());
+        sOutputAdapters = new ArrayList<>();
+        sOutputAdapters.add(new OutputBitmapAdapter());
+        sOutputAdapters.add(new OutputFilePathAdapter());
+        sOutputAdapters.add(new OutputByteArrayAdapter());
+        sOutputAdapters.add(new OutputUriAdapter());
+        sOutputAdapters.add(new OutputFileAdapter());
+        // init completed.
+        sHasInit = true;
+    }
+
+    public static void setDebug(boolean isDebug) {
+        sIsDebug = isDebug;
     }
 
     /**
      * Add u custom input source adapter from here.
      */
     public static void addInputAdapter(@NonNull InputAdapter adapter) {
+        if (!sHasInit) {
+            throw new IllegalStateException("Please init first");
+        }
         Preconditions.checkNotNull(adapter);
-        INPUT_ADAPTERS.add(adapter);
+        sInputAdapters.add(adapter);
     }
 
     /**
      * Add u custom output source adapter from here.
      */
     public static void addOutputAdapter(@NonNull OutputAdapter adapter) {
+        if (!sHasInit) {
+            throw new IllegalStateException("Please init first");
+        }
         Preconditions.checkNotNull(adapter);
-        OUTPUT_ADAPTERS.add(adapter);
+        sOutputAdapters.add(adapter);
     }
 
     public static void replaceArrayPool(ByteArrayPool arrayPool) {
+        if (!sHasInit) {
+            throw new IllegalStateException("Please init first");
+        }
         sArrayPool = arrayPool;
     }
 
@@ -82,7 +103,11 @@ public final class SCompressor {
      *                    File Uri {@link Uri}
      */
     @NonNull
-    public static <InputType> Request.Builder<InputType, File> with(final InputType inputSource) {
+    public static <InputType> Request.Builder<InputType, File> with(@NonNull final InputType inputSource) {
+        if (!sHasInit) {
+            throw new IllegalStateException("Please init first");
+        }
+        Preconditions.checkNotNull(inputSource);
         return new Request.Builder<>(new InputSource<InputType>() {
             @NonNull
             @Override
@@ -103,6 +128,9 @@ public final class SCompressor {
      */
     static <InputType, OutputType> void asyncCall(Request<InputType, OutputType> request,
                                                   ICompressorCallback<OutputType> callback) {
+        if (!sHasInit) {
+            throw new IllegalStateException("Please init first");
+        }
         Preconditions.checkNotNull(callback, "Please ensure Request.callback non null!");
         AsyncCaller.execute(request, callback);
     }
@@ -114,6 +142,9 @@ public final class SCompressor {
      */
     @Nullable
     static <InputType, OutputType> OutputType syncCall(Request<InputType, OutputType> request) {
+        if (!sHasInit) {
+            throw new IllegalStateException("Please init first");
+        }
         Preconditions.checkNotNull(request.inputSource, "Please ensure Request.inputSource non null!");
         OutputType output = null;
         try {

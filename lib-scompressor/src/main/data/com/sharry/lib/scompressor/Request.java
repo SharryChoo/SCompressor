@@ -13,6 +13,7 @@ import java.io.File;
 
 import static androidx.annotation.Dimension.PX;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
+import static com.sharry.lib.scompressor.SCompressor.sIsDebug;
 
 
 /**
@@ -224,7 +225,7 @@ public class Request<InputType, OutputType> {
                                                                 @NonNull CompressFormat withAlpha) {
             Preconditions.checkNotNull(withoutAlpha);
             Preconditions.checkNotNull(withAlpha);
-            if (withAlpha == CompressFormat.JPEG) {
+            if (withAlpha == CompressFormat.JPEG && sIsDebug) {
                 Log.w(TAG, "Image type JPEG will lost alpha channel.");
             }
             this.withoutAlpha = withoutAlpha;
@@ -292,7 +293,9 @@ public class Request<InputType, OutputType> {
 
                 @Override
                 public void onFailed(@NonNull Throwable e) {
-                    Log.e(TAG, e.getMessage(), e);
+                    if (sIsDebug) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }
             });
         }

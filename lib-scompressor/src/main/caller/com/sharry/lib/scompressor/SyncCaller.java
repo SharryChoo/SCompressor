@@ -14,6 +14,7 @@ import java.io.InputStream;
 import static com.sharry.lib.scompressor.Core.calculateSampleSize;
 import static com.sharry.lib.scompressor.SCompressor.TAG;
 import static com.sharry.lib.scompressor.SCompressor.sArrayPool;
+import static com.sharry.lib.scompressor.SCompressor.sIsDebug;
 
 /**
  * @author Sharry <a href="SharryChooCHN@Gmail.com">Contact me.</a>
@@ -39,9 +40,9 @@ final class SyncCaller {
         // 3. Do requestedQuality compress
         File compressedFile = doQualityCompress(request, downsampledBitmap);
         // 4. Adapter 2 target type.
-        if (BuildConfig.DEBUG) {
-            Log.e(TAG, "Output file is: " + compressedFile.getAbsolutePath());
-            Log.e(TAG, "Output file length is " + compressedFile.length() / 1024 + "kb");
+        if (sIsDebug) {
+            Log.e(TAG, "Compressed File is: " + compressedFile.getAbsolutePath());
+            Log.e(TAG, "Compressed File length is " + compressedFile.length() / 1024 + "kb");
         }
         return findOutputAdapter(request.outputType).adapt(SCompressor.sContext,
                 SCompressor.sAuthority, compressedFile);
@@ -61,6 +62,9 @@ final class SyncCaller {
 
     private static <OutputType, InputType> Bitmap handleBitmapInputType(Request<InputType, OutputType> request) {
         Bitmap originBitmap = (Bitmap) request.inputSource.getSource();
+        if (sIsDebug) {
+            Log.e(TAG, "Origin bitmap size is [" + originBitmap.getWidth() + ", " + originBitmap.getHeight() + "]");
+        }
         int sampleSize;
         if (request.requestedWidth == Request.INVALIDATE || request.requestedHeight == Request.INVALIDATE) {
             if (request.isAutoDownsample) {
@@ -72,13 +76,19 @@ final class SyncCaller {
             sampleSize = calculateSampleSize(originBitmap.getWidth(), originBitmap.getHeight(),
                     request.requestedWidth, request.requestedHeight);
         }
+        Bitmap downsampled;
         if (sampleSize == 1) {
-            Log.i(TAG, "Do not need down sample");
-            return originBitmap;
+            // Do not need down sample.
+            downsampled = originBitmap;
+        } else {
+            // Use bilinear filtering.
+            downsampled = Bitmap.createScaledBitmap(originBitmap, originBitmap.getWidth() / sampleSize,
+                    originBitmap.getHeight() / sampleSize, true);
         }
-        // Use bilinear filtering.
-        return Bitmap.createScaledBitmap(originBitmap, originBitmap.getWidth() / sampleSize,
-                originBitmap.getHeight() / sampleSize, true);
+        if (sIsDebug) {
+            Log.e(TAG, "Downsampled bitmap size is [" + downsampled.getWidth() + ", " + downsampled.getHeight() + "]");
+        }
+        return downsampled;
     }
 
     /**
@@ -116,27 +126,35 @@ final class SyncCaller {
         BitmapFactory.decodeStream(is, null, options);
         is.reset();                        // reset
         options.inJustDecodeBounds = false;
+        if (sIsDebug) {
+            Log.e(TAG, "Origin bitmap size is [" + options.outWidth + ", " + options.outHeight + "]");
+        }
         // calculate sample size.
         if (request.requestedWidth == Request.INVALIDATE || request.requestedHeight == Request.INVALIDATE) {
             if (request.isAutoDownsample) {
                 options.inSampleSize = Core.calculateAutoSampleSize(options.outWidth, options.outHeight);
             } else {
-                Log.i(TAG, "Do not need down sample");
+                if (sIsDebug) {
+                    Log.i(TAG, "Do not need down sample");
+                }
             }
         } else {
             options.inSampleSize = Core.calculateSampleSize(options.outWidth, options.outHeight,
                     request.requestedWidth, request.requestedHeight);
         }
         // 5. Do Neighbour down sampling compress
-        Bitmap result = BitmapFactory.decodeStream(is, null, options);
+        Bitmap downsampled = BitmapFactory.decodeStream(is, null, options);
+        if (sIsDebug) {
+            Log.e(TAG, "Downsampled bitmap size is [" + downsampled.getWidth() + ", " + downsampled.getHeight() + "]");
+        }
         // close the stream.
         is.close();
-        return result;
+        return downsampled;
     }
 
     private static <InputType> InputAdapter<InputType> findInputAdapter(Class<InputType> inputType) {
         InputAdapter<InputType> adapter = null;
-        for (InputAdapter current : SCompressor.INPUT_ADAPTERS) {
+        for (InputAdapter current : SCompressor.sInputAdapters) {
             if (current.isAdapter(inputType)) {
                 adapter = current;
             }
@@ -190,7 +208,7 @@ final class SyncCaller {
 
     private static <Target> OutputAdapter<Target> findOutputAdapter(Class<Target> targetType) {
         OutputAdapter<Target> adapter = null;
-        for (OutputAdapter current : SCompressor.OUTPUT_ADAPTERS) {
+        for (OutputAdapter current : SCompressor.sOutputAdapters) {
             if (current.isAdapter(targetType)) {
                 adapter = current;
             }

@@ -118,6 +118,8 @@ int LibJpegTurboUtils::write_JPEG_file(JSAMPLE *image_buffer, int image_height, 
     if (arith_code) {
         cinfo.arith_code = TRUE;
     } else {
+        // When quality is 50
+        // TRUE is opt huffman, compress ratio will higher 10% than FALSE
         cinfo.optimize_coding = TRUE;
     }
 

@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                 // 压缩后的期望大小
                 .setDesireLength(1000 * 500)
                 // 压缩质量
-                .setQuality(70)
+                .setQuality(50)
                 // 设置压缩后文件输出类型
                 .setCompressFormat(
                         // 非透明通道文件输出

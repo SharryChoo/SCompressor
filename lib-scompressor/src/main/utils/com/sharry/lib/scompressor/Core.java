@@ -94,7 +94,7 @@ final class Core {
     }
 
     static void compressBySkia(Bitmap sourceBitmap, int quality,
-                               int desireOutputFileLength, File compressedFile,
+                               int requestedLength, File compressedFile,
                                Bitmap.CompressFormat compressFormat) throws IOException {
         do {
             FileOutputStream fos = new FileOutputStream(compressedFile);
@@ -103,8 +103,8 @@ final class Core {
             fos.close();
             quality -= 10;
         } while (
-                desireOutputFileLength != Request.INVALIDATE &&
-                        compressedFile.length() > desireOutputFileLength &&
+                requestedLength != Request.INVALIDATE &&
+                        compressedFile.length() > requestedLength &&
                         quality > 0
         );
     }

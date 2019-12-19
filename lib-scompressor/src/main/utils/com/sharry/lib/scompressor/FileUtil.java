@@ -54,28 +54,4 @@ class FileUtil {
         return file;
     }
 
-    /**
-     * 创建临时文件
-     *
-     * @return 创建的文件
-     */
-    static File createTempFile(Context context) {
-        // 获取临时文件目录
-        File tempDirectory = context.getCacheDir();
-        // 创建临时文件
-        String tempFileName = "compress_temp_" + DateFormat.format("yyyyMMdd_HH_mm_ss",
-                Calendar.getInstance(Locale.CHINA)) + ".jpg";
-        File tempFile = new File(tempDirectory, tempFileName);
-        try {
-            if (tempFile.exists()) {
-                tempFile.delete();
-            }
-            tempFile.createNewFile();
-        } catch (IOException e) {
-            // ignore.
-        }
-        return tempFile;
-    }
-
-
 }

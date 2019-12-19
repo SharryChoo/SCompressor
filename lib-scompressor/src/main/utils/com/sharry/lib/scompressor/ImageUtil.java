@@ -99,9 +99,9 @@ final class ImageUtil {
     private static final int WEBP_EXTENDED_ALPHA_FLAG = 1 << 4;
     private static final int WEBP_LOSSLESS_ALPHA_FLAG = 1 << 3;
 
-    static boolean hasAlpha(InputStream fd) {
+    static boolean hasAlpha(InputStream is) {
         try {
-            ImageType type = getType(new StreamReader(fd));
+            ImageType type = getType(new StreamReader(is));
             return type.hasAlpha();
         } catch (IOException e) {
             return true;
