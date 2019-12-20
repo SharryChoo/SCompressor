@@ -7,6 +7,10 @@ package com.sharry.lib.gif;
  */
 public class GifHelper {
 
+    static {
+        System.loadLibrary("gifkit");
+    }
+
     /**
      * 对 GIF 图进行降采样
      *

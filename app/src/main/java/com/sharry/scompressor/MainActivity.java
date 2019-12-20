@@ -18,6 +18,7 @@ import com.sharry.lib.album.MediaMeta;
 import com.sharry.lib.album.PickerCallback;
 import com.sharry.lib.album.PickerConfig;
 import com.sharry.lib.album.PickerManager;
+import com.sharry.lib.gif.GifHelper;
 import com.sharry.lib.scompressor.CompressFormat;
 import com.sharry.lib.scompressor.ICompressorCallbackLambda;
 import com.sharry.lib.scompressor.SCompressor;
@@ -78,7 +79,8 @@ public class MainActivity extends AppCompatActivity {
                         .start(new PickerCallback() {
                             @Override
                             public void onPickedComplete(@NonNull ArrayList<MediaMeta> arrayList) {
-                                doCompress(arrayList.get(0));
+                                GifHelper.downsampler(arrayList.get(0).getPath(), "", 2);
+//                                doCompress(arrayList.get(0));
                             }
                         });
             }

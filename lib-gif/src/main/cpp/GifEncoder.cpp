@@ -11,9 +11,9 @@ GifEncoder::GifEncoder(char *file_name) {
 
 void GifEncoder::start(const int Width, const int Height, const int ColorRes, const int BackGround,
                        const ColorMapObject *ColorMap, int duration) {
-    // write logical screen
+    // 1. 逻辑屏幕标识符(Logical Screen Descriptor) 和 全局颜色列表
     EGifPutScreenDesc(outputGif, Width, Height, ColorRes, BackGround, ColorMap);
-    // 2. 写入 graphic control extension 块，此块可以设定动画速度和透明色
+    // 2. 图形控制扩展(Graphic Control Extension)，此块可以设定动画速度和透明色
     GraphicsControlBlock gcb;
     gcb.DisposalMode = DISPOSE_DO_NOT;
     gcb.UserInputFlag = false;
