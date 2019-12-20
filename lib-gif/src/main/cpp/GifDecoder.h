@@ -7,7 +7,7 @@
 #define SCOMPRESSOR_GIFDECODER_H
 
 #include <jni.h>
-#include "giflib/core/gif_lib.h"
+#include "giflib/gif_lib.h"
 #include "utils/color.h"
 #include "stream/Stream.h"
 
@@ -51,11 +51,6 @@ public:
     int getFrameCount() { return mGif->ImageCount; }
 };
 
+jint GifDecoder_OnLoad(JNIEnv *env);
 
-typedef struct GifInfo {
-    int total_time;     //总时间
-    int current_frame;  //当前帧
-    int frame_duration; //每一帧时间
-    int total_frame;    //总帧数
-} GifInfo;
 #endif //SCOMPRESSOR_GIFDECODER_H
