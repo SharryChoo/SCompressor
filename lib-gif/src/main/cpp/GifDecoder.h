@@ -58,5 +58,4 @@ typedef struct GifInfo {
     int frame_duration; //每一帧时间
     int total_frame;    //总帧数
 } GifInfo;
-
 #endif //SCOMPRESSOR_GIFDECODER_H

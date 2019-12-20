@@ -68,8 +68,6 @@ static int streamReader(GifFileType *fileType, GifByteType *out, int size) {
 // GifDecoder Implementation
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
 GifDecoder::GifDecoder(char *filePath) {
     mGif = DGifOpenFileName(filePath, NULL);
     init();

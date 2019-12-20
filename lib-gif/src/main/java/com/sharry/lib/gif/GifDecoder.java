@@ -12,10 +12,6 @@ import java.nio.ByteBuffer;
  */
 public final class GifDecoder {
 
-    static {
-        System.loadLibrary("gifkit");
-    }
-
     public static GifDecoder decodeFilePath(String filePath) {
         return new GifDecoder(nativeDecodeFile(filePath));
     }
@@ -58,13 +54,6 @@ public final class GifDecoder {
         return new GifDecoder(nativeDecodeByteBuffer(buffer, buffer.position(), buffer.remaining()));
     }
 
-    private static native long nativeDecodeFile(String filePath);
-
-    private static native long nativeDecodeStream(InputStream stream, byte[] tempStorage);
-
-    private static native long nativeDecodeByteArray(byte[] data, int offset, int length);
-
-    private static native long nativeDecodeByteBuffer(ByteBuffer buffer, int position, int remaining);
 
     // /////////////////////////////////////////// Inner Method. //////////////////////////////////////////////////
 
@@ -110,13 +99,27 @@ public final class GifDecoder {
         }
     }
 
-    private native int nativeGetWidth(long nativePtr);
+    // /////////////////////////////////////////// Native Method. //////////////////////////////////////////////////
 
-    private native int nativeGetHeight(long nativePtr);
+    static {
+        System.loadLibrary("gifkit");
+    }
 
-    private native int nativeGetFrameCount(long mNativePtr);
+    private static native long nativeDecodeFile(String filePath);
 
-    private native long nativeGetFrame(long decoder, int frameNr, Bitmap output, int previousFrameNr);
+    private static native long nativeDecodeStream(InputStream stream, byte[] tempStorage);
 
-    private native void nativeDestroy(long nativePtr);
+    private static native long nativeDecodeByteArray(byte[] data, int offset, int length);
+
+    private static native long nativeDecodeByteBuffer(ByteBuffer buffer, int position, int remaining);
+
+    private static native int nativeGetWidth(long nativePtr);
+
+    private static native int nativeGetHeight(long nativePtr);
+
+    private static native int nativeGetFrameCount(long mNativePtr);
+
+    private static native long nativeGetFrame(long decoder, int frameNr, Bitmap output, int previousFrameNr);
+
+    private static native void nativeDestroy(long nativePtr);
 }
