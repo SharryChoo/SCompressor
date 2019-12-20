@@ -6,16 +6,32 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
+ * Gif 解码工具类
+ *
  * @author Sharry <a href="xiaoyu.zhu@1hai.cn">Contact me.</a>
  * @version 1.0
  * @since 2019-12-20 14:23
  */
 public final class GifDecoder {
 
+    // /////////////////////////////////////////// Get instance //////////////////////////////////////////////////
+
+    /**
+     * Get an instance of GifDecoder
+     *
+     * @param filePath a gif file path.
+     * @return an instance of GifDecoder
+     */
     public static GifDecoder decodeFilePath(String filePath) {
         return new GifDecoder(nativeDecodeFile(filePath));
     }
 
+    /**
+     * Get an instance of GifDecoder
+     *
+     * @param stream a gif stream
+     * @return an instance of GifDecoder
+     */
     public static GifDecoder decodeStream(InputStream stream) {
         if (stream == null) {
             throw new IllegalArgumentException();
@@ -25,10 +41,22 @@ public final class GifDecoder {
         return new GifDecoder(nativeDecodeStream(stream, tempStorage));
     }
 
+    /**
+     * Get an instance of GifDecoder
+     *
+     * @param data a gif byte array.
+     * @return an instance of GifDecoder
+     */
     public static GifDecoder decodeByteArray(byte[] data) {
         return decodeByteArray(data, 0, data.length);
     }
 
+    /**
+     * Get an instance of GifDecoder
+     *
+     * @param data a gif byte array.
+     * @return an instance of GifDecoder
+     */
     public static GifDecoder decodeByteArray(byte[] data, int offset, int length) {
         if (data == null) {
             throw new IllegalArgumentException();
@@ -39,6 +67,12 @@ public final class GifDecoder {
         return new GifDecoder(nativeDecodeByteArray(data, offset, length));
     }
 
+    /**
+     * Get an instance of GifDecoder
+     *
+     * @param buffer a gif native buffer.
+     * @return an instance of GifDecoder
+     */
     public static GifDecoder decodeByteBuffer(ByteBuffer buffer) {
         if (buffer == null) {
             throw new IllegalArgumentException();
@@ -54,7 +88,6 @@ public final class GifDecoder {
         return new GifDecoder(nativeDecodeByteBuffer(buffer, buffer.position(), buffer.remaining()));
     }
 
-
     // /////////////////////////////////////////// Inner Method. //////////////////////////////////////////////////
 
     private long mNativePtr;
@@ -67,22 +100,48 @@ public final class GifDecoder {
         return 1;
     }
 
+    /**
+     * Get Bitmap at require frame.
+     *
+     * @param frameNr         the frame that u wanted.
+     * @param output          in and out args, will fill pixels at native.
+     * @param previousFrameNr previous frame number, u can pass -1.
+     * @return next frame duration. Unit is ms
+     */
     public long getFrame(int frameNr, Bitmap output, int previousFrameNr) {
         return nativeGetFrame(mNativePtr, frameNr, output, previousFrameNr);
     }
 
+    /**
+     * Get gif width.
+     *
+     * @return gif width.
+     */
     public int getWidth() {
         return nativeGetWidth(mNativePtr);
     }
 
+    /**
+     * Get gif height.
+     *
+     * @return gif height.
+     */
     public int getHeight() {
         return nativeGetHeight(mNativePtr);
     }
 
+    /**
+     * Get gif frame count.
+     *
+     * @return gif frame count.
+     */
     public int getFrameCount() {
         return nativeGetFrameCount(mNativePtr);
     }
 
+    /**
+     * Destroy resource.
+     */
     public void destroy() {
         nativeDestroy(mNativePtr);
     }
@@ -91,7 +150,7 @@ public final class GifDecoder {
     protected void finalize() throws Throwable {
         try {
             if (mNativePtr != 0) {
-                destroy();
+                nativeDestroy(mNativePtr);
                 mNativePtr = 0;
             }
         } finally {
@@ -122,4 +181,5 @@ public final class GifDecoder {
     private static native long nativeGetFrame(long decoder, int frameNr, Bitmap output, int previousFrameNr);
 
     private static native void nativeDestroy(long nativePtr);
+
 }

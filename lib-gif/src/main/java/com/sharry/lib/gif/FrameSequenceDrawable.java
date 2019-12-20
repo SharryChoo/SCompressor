@@ -33,6 +33,16 @@ import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 
+/**
+ * Thanks for Google
+ * <p>
+ * Copy from
+ * http://androidxref.com/9.0.0_r3/xref/frameworks/ex/framesequence/src/android/support/rastermill/FrameSequenceDrawable.java
+ *
+ * @author Sharry <a href="xiaoyu.zhu@1hai.cn">Contact me.</a>
+ * @version 1.0
+ * @since 2019-12-20 17:48
+ */
 public class FrameSequenceDrawable extends Drawable implements Animatable, Runnable {
 
     private static final String TAG = "FrameSequence";
@@ -62,21 +72,21 @@ public class FrameSequenceDrawable extends Drawable implements Animatable, Runna
         }
     }
 
-    public static interface OnFinishedListener {
+    public interface OnFinishedListener {
         /**
          * Called when a FrameSequenceDrawable has finished looping.
          * <p>
          * Note that this is will not be called if the drawable is explicitly
          * stopped, or marked invisible.
          */
-        public abstract void onFinished(FrameSequenceDrawable drawable);
+        void onFinished(FrameSequenceDrawable drawable);
     }
 
-    public static interface BitmapProvider {
+    public interface BitmapProvider {
         /**
          * Called by FrameSequenceDrawable to aquire an 8888 Bitmap with minimum dimensions.
          */
-        public abstract Bitmap acquireBitmap(int minWidth, int minHeight);
+        Bitmap acquireBitmap(int minWidth, int minHeight);
 
         /**
          * Called by FrameSequenceDrawable to release a Bitmap it no longer needs. The Bitmap
@@ -84,7 +94,7 @@ public class FrameSequenceDrawable extends Drawable implements Animatable, Runna
          * <p>
          * This method may be called by FrameSequenceDrawable on any thread.
          */
-        public abstract void releaseBitmap(Bitmap bitmap);
+        void releaseBitmap(Bitmap bitmap);
     }
 
     private static BitmapProvider sAllocatingBitmapProvider = new BitmapProvider() {

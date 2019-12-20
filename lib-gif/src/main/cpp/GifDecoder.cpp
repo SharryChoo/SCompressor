@@ -1,5 +1,8 @@
 //
 // Created by Sharry on 2019-12-20.
+// Thanks for google
+// Copy form http://androidxref.com/9.0.0_r3/xref/frameworks/ex/framesequence/jni/FrameSequence_gif.cpp
+// Webp link is http://androidxref.com/9.0.0_r3/xref/frameworks/ex/framesequence/jni/FrameSequence_webp.cpp
 //
 
 #include <malloc.h>
@@ -67,6 +70,7 @@ static int streamReader(GifFileType *fileType, GifByteType *out, int size) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // GifDecoder Implementation
+// Thanks for Google.
 ////////////////////////////////////////////////////////////////////////////////
 
 GifDecoder::GifDecoder(char *filePath) {
@@ -309,7 +313,6 @@ void GifDecoder::savePreserveBuffer(Color8888 *outputPtr, int outputPixelStride,
                width * 4);
     }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // JNILoader
