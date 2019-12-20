@@ -59,20 +59,35 @@ static void getCopySize(const GifImageDesc &imageDesc, int maxWidth, int maxHeig
     }
 }
 
+static int streamReader(GifFileType *fileType, GifByteType *out, int size) {
+    Stream *stream = (Stream *) fileType->UserData;
+    return (int) stream->read(out, size);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // GifDecoder Implementation
 ////////////////////////////////////////////////////////////////////////////////
 
-GifDecoder::GifDecoder(char *fileName) :
-        mLoopCount(1), mBgColor(TRANSPARENT), mPreservedFrames(NULL), mRestoringFrames(NULL) {
-    int errorStatus;
-    mGif = DGifOpenFileName(fileName, &errorStatus);
+
+
+GifDecoder::GifDecoder(char *filePath) {
+    mGif = DGifOpenFileName(filePath, NULL);
+    init();
+}
+
+GifDecoder::GifDecoder(Stream *stream) {
+    mGif = DGifOpen(stream, streamReader, NULL);
+    ALOGE("GifDecoder stream constructor");
+    init();
+}
+
+void GifDecoder::init() {
     if (!mGif) {
-        ALOGE("Gif load failed");
+        ALOGW("Gif load failed");
         return;
     }
     if (DGifSlurp(mGif) != GIF_OK) {
-        ALOGE("Gif slurp failed");
+        ALOGW("Gif slurp failed");
         DGifCloseFile(mGif, NULL);
         mGif = NULL;
         return;
@@ -149,6 +164,7 @@ GifDecoder::~GifDecoder() {
     }
     delete[] mPreservedFrames;
     delete[] mRestoringFrames;
+    ALOGE("GifDecoder release.");
 }
 
 long GifDecoder::drawFrame(int frameNr, Color8888 *outputPtr, int outputPixelStride,
@@ -168,7 +184,8 @@ long GifDecoder::drawFrame(int frameNr, Color8888 *outputPtr, int outputPixelStr
 
     for (int i = max(start - 1, 0); i < frameNr; i++) {
         int neededPreservedFrame = getRestoringFrame(i);
-        if (neededPreservedFrame >= 0 && (mPreserveBufferFrame != neededPreservedFrame)) {
+        if (neededPreservedFrame >= 0 &&
+            (mPreserveBufferFrame != neededPreservedFrame)) {
 #if GIF_DEBUG
             ALOGD("frame %d needs frame %d preserved, but %d is currently, so drawing from scratch",
                     i, neededPreservedFrame, mPreserveBufferFrame);
@@ -202,7 +219,8 @@ long GifDecoder::drawFrame(int frameNr, Color8888 *outputPtr, int outputPixelStr
 
             bool newFrameOpaque = gcb.TransparentColor == NO_TRANSPARENT_COLOR;
             bool prevFrameCompletelyCovered = newFrameOpaque
-                                              && checkIfCover(frame.ImageDesc, prevFrame.ImageDesc);
+                                              && checkIfCover(frame.ImageDesc,
+                                                              prevFrame.ImageDesc);
 
             if (prevFrameDisposed && !prevFrameCompletelyCovered) {
                 switch (prevGcb.DisposalMode) {
@@ -211,7 +229,8 @@ long GifDecoder::drawFrame(int frameNr, Color8888 *outputPtr, int outputPixelStr
                                          prevFrame.ImageDesc.Top * outputPixelStride;
 
                         GifWord copyWidth, copyHeight;
-                        getCopySize(prevFrame.ImageDesc, width, height, copyWidth, copyHeight);
+                        getCopySize(prevFrame.ImageDesc, width, height, copyWidth,
+                                    copyHeight);
                         for (; copyHeight > 0; copyHeight--) {
                             setLineColor(dst, TRANSPARENT, copyWidth);
                             dst += outputPixelStride;
@@ -244,7 +263,8 @@ long GifDecoder::drawFrame(int frameNr, Color8888 *outputPtr, int outputPixelStr
             if (cmap) {
                 const unsigned char *src = frame.RasterBits;
                 Color8888 *dst =
-                        outputPtr + frame.ImageDesc.Left + frame.ImageDesc.Top * outputPixelStride;
+                        outputPtr + frame.ImageDesc.Left +
+                        frame.ImageDesc.Top * outputPixelStride;
                 GifWord copyWidth, copyHeight;
                 getCopySize(frame.ImageDesc, width, height, copyWidth, copyHeight);
                 for (; copyHeight > 0; copyHeight--) {
@@ -270,13 +290,12 @@ void GifDecoder::restorePreserveBuffer(Color8888 *outputPtr, int outputPixelStri
         return;
     }
     for (int y = 0; y < height; y++) {
-        memcpy(outputPtr + outputPixelStride * y,
-               mPreserveBuffer + width * y,
-               width * 4);
+        memcpy(outputPtr + outputPixelStride * y, mPreserveBuffer + width * y, width * 4);
     }
 }
 
-void GifDecoder::savePreserveBuffer(Color8888 *outputPtr, int outputPixelStride, int frameNr) {
+void GifDecoder::savePreserveBuffer(Color8888 *outputPtr, int outputPixelStride,
+                                    int frameNr) {
     if (frameNr == mPreserveBufferFrame) return;
 
     mPreserveBufferFrame = frameNr;

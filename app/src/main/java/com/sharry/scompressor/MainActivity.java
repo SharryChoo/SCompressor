@@ -18,12 +18,13 @@ import com.sharry.lib.album.MediaMeta;
 import com.sharry.lib.album.PickerCallback;
 import com.sharry.lib.album.PickerConfig;
 import com.sharry.lib.album.PickerManager;
-import com.sharry.lib.gif.GifHelper;
+import com.sharry.lib.gif.GifDecoder;
 import com.sharry.lib.scompressor.CompressFormat;
 import com.sharry.lib.scompressor.ICompressorCallbackLambda;
 import com.sharry.lib.scompressor.SCompressor;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 
 /**
@@ -79,12 +80,43 @@ public class MainActivity extends AppCompatActivity {
                         .start(new PickerCallback() {
                             @Override
                             public void onPickedComplete(@NonNull ArrayList<MediaMeta> arrayList) {
-                                GifHelper.downsampler(arrayList.get(0).getPath(), "", 2);
-//                                doCompress(arrayList.get(0));
+                                showGif(arrayList.get(0).getPath());
                             }
                         });
             }
         });
+    }
+
+    int curFrame = 0;
+    long mDuration = 0;
+    int frameCount;
+
+    private void showGif(String path) {
+        try {
+            GifDecoder decoder = GifDecoder.decodeStream(new FileInputStream(path));
+            frameCount = decoder.getFrameCount();
+            postNext(decoder);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void postNext(final GifDecoder decoder) {
+        mIvCompressed.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Bitmap bitmap = Bitmap.createBitmap(decoder.getWidth(), decoder.getHeight(),
+                        Bitmap.Config.ARGB_8888);
+                mDuration = decoder.getFrame(curFrame++, bitmap, -1);
+                mIvCompressed.setImageBitmap(bitmap);
+                // 绘制下一帧
+                if (curFrame < frameCount) {
+                    postNext(decoder);
+                } else {
+                    decoder.destroy();
+                }
+            }
+        }, mDuration);
     }
 
     private void doCompress(MediaMeta mediaMeta) {

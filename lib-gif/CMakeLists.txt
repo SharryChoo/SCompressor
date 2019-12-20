@@ -5,7 +5,12 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.4.1)
 ADD_SUBDIRECTORY(src/main/cpp/giflib)
 
 # 对文件集合取变量
-FILE(GLOB SRC_LIST "${PROJECT_SOURCE_DIR}/src/main/cpp/*.cpp")
+FILE(
+        GLOB
+        SRC_LIST
+        "${PROJECT_SOURCE_DIR}/src/main/cpp/*.cpp"
+        "${PROJECT_SOURCE_DIR}/src/main/cpp/stream/*.cpp"
+)
 
 # 添加要打包的资源
 ADD_LIBRARY(

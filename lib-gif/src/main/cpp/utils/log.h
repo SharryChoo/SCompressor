@@ -44,7 +44,7 @@ extern "C" {
  * before using the other macros to change the tag.
  */
 #ifndef LOG_TAG
-#define LOG_TAG "RasterMill"
+#define LOG_TAG "GIF_KIT"
 #endif
 
 // ---------------------------------------------------------------------
