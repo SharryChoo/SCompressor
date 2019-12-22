@@ -68,8 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
                             @Override
                             public void loadGif(@NonNull Context context, @NonNull MediaMeta mediaMeta, @NonNull ImageView imageView) {
-                                GlideApp.with(context).asGif2().load(mediaMeta.getContentUri()).into(imageView);
-//                                Glide.with(context).asGif().load(mediaMeta.getContentUri()).into(imageView);
+                                Glide.with(context).asGif().load(mediaMeta.getContentUri()).into(imageView);
                             }
 
                             @Override

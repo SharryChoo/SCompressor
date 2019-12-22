@@ -1,1 +1,1 @@
-include ':app', ':lib-scompressor', ':lib-gif'
+include ':app', ':lib-scompressor'

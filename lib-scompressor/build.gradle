@@ -42,5 +42,4 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$supportLibraryVersion"
-    api project(':lib-gif')
 }
