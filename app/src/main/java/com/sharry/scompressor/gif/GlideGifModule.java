@@ -17,7 +17,7 @@ public class GlideGifModule extends AppGlideModule {
 
     @Override
     public void registerComponents(@NonNull Context context, @NonNull Glide glide, @NonNull Registry registry) {
-        // 注册一个将 GIF 的 InputStream 转为  FrameSequenceDrawable 的 ResourceDecoder
+        // 注册一个 GifResourceDecoder, 用于将 GIF 的 InputStream 转为 FrameSequenceDrawable
         registry.prepend(
                 Registry.BUCKET_GIF,
                 InputStream.class, FrameSequenceDrawable.class,

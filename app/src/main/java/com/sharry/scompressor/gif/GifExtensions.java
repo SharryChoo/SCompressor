@@ -6,13 +6,20 @@ import com.bumptech.glide.annotation.GlideType;
 import com.bumptech.glide.request.RequestOptions;
 import com.sharry.lib.gif.FrameSequenceDrawable;
 
+/**
+ * Define Glide Extension.
+ *
+ * @author Sharry <a href="sharrychoochn@gmail.com">Contact me.</a>
+ * @version 1.0
+ * @since 2019-12-22
+ */
 @GlideExtension
 public class GifExtensions {
 
     private GifExtensions() {
     }
 
-    final static RequestOptions DECODE_TYPE = RequestOptions
+    private final static RequestOptions DECODE_TYPE = RequestOptions
             .decodeTypeOf(FrameSequenceDrawable.class)
             .lock();
 
