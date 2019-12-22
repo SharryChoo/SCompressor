@@ -15,14 +15,15 @@ class GifDecoder {
 
 private:
     GifFileType *mGif;
-    int mLoopCount = 1;
     // array of bool per frame - if true, frame data is used by a later DISPOSE_PREVIOUS frame
     bool *mPreservedFrames = NULL;
     // array of ints per frame - if >= 0, points to the index of the preserve that frame needs
     int *mRestoringFrames = NULL;
+    int mPreserveBufferFrame;
+    int mLoopCount = 1;
+    long mDurationMs;
     Color8888 *mPreserveBuffer = NULL;
     Color8888 mBgColor = TRANSPARENT;
-    int mPreserveBufferFrame;
 
 public:
 
@@ -32,9 +33,28 @@ public:
 
     ~GifDecoder();
 
-    void init();
+    int getWidth() { return mGif->SWidth; }
+
+    int getHeight() { return mGif->SHeight; }
+
+    bool isOpaque() {
+        return (mBgColor & COLOR_8888_ALPHA_MASK) == COLOR_8888_ALPHA_MASK;
+    }
+
+    int getFrameCount() { return mGif->ImageCount; }
+
+    int getLooperCount() {
+        return mLoopCount;
+    }
+
+    long getDuration() {
+        return mDurationMs;
+    }
 
     long drawFrame(int frameNr, Color8888 *outputPtr, int outputPixelStride, int previousFrameNr);
+
+private:
+    void init();
 
     bool getPreservedFrame(int frameIndex) const { return mPreservedFrames[frameIndex]; }
 
@@ -44,11 +64,6 @@ public:
 
     void restorePreserveBuffer(Color8888 *outputPtr, int outputPixelStride);
 
-    int getWidth() { return mGif->SWidth; }
-
-    int getHeight() { return mGif->SHeight; }
-
-    int getFrameCount() { return mGif->ImageCount; }
 };
 
 jint GifDecoder_OnLoad(JNIEnv *env);

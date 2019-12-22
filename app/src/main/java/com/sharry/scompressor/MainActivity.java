@@ -21,6 +21,7 @@ import com.sharry.lib.album.PickerManager;
 import com.sharry.lib.scompressor.CompressFormat;
 import com.sharry.lib.scompressor.ICompressorCallbackLambda;
 import com.sharry.lib.scompressor.SCompressor;
+import com.sharry.scompressor.gif.GlideApp;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
                             @Override
                             public void loadGif(@NonNull Context context, @NonNull MediaMeta mediaMeta, @NonNull ImageView imageView) {
-                                Glide.with(context).asGif().load(mediaMeta.getContentUri()).into(imageView);
+                                GlideApp.with(context).asGif2().load(mediaMeta.getContentUri()).into(imageView);
                             }
 
                             @Override

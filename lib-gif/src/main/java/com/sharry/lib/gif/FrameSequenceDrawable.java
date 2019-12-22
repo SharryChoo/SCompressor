@@ -409,7 +409,7 @@ public class FrameSequenceDrawable extends Drawable implements Animatable, Runna
                 if (mNextFrameToDecode == mDecoder.getFrameCount() - 1) {
                     mCurrentLoop++;
                     if ((mLoopBehavior == LOOP_FINITE && mCurrentLoop == mLoopCount) ||
-                            (mLoopBehavior == LOOP_DEFAULT && mCurrentLoop == mDecoder.getDefaultLoopCount())) {
+                            (mLoopBehavior == LOOP_DEFAULT && mCurrentLoop == mDecoder.getLooperCount())) {
                         continueLooping = false;
                     }
                 }
@@ -555,6 +555,6 @@ public class FrameSequenceDrawable extends Drawable implements Animatable, Runna
 
     @Override
     public int getOpacity() {
-        return /*mDecoder.isOpaque() ? PixelFormat.OPAQUE : */PixelFormat.TRANSPARENT;
+        return mDecoder.isOpaque() ? PixelFormat.OPAQUE : PixelFormat.TRANSPARENT;
     }
 }

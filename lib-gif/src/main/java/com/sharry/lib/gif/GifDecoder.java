@@ -1,6 +1,7 @@
 package com.sharry.lib.gif;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -14,6 +15,8 @@ import java.nio.ByteBuffer;
  */
 public final class GifDecoder {
 
+    private static final String TAG = GifDecoder.class.getSimpleName();
+
     // /////////////////////////////////////////// Get instance //////////////////////////////////////////////////
 
     /**
@@ -23,7 +26,7 @@ public final class GifDecoder {
      * @return an instance of GifDecoder
      */
     public static GifDecoder decodeFilePath(String filePath) {
-        return new GifDecoder(nativeDecodeFile(filePath));
+        return nativeDecodeFile(filePath);
     }
 
     /**
@@ -38,7 +41,7 @@ public final class GifDecoder {
         }
         // use buffer pool
         byte[] tempStorage = new byte[16 * 1024];
-        return new GifDecoder(nativeDecodeStream(stream, tempStorage));
+        return nativeDecodeStream(stream, tempStorage);
     }
 
     /**
@@ -64,7 +67,7 @@ public final class GifDecoder {
         if (offset < 0 || length < 0 || (offset + length > data.length)) {
             throw new IllegalArgumentException("invalid offset/length parameters");
         }
-        return new GifDecoder(nativeDecodeByteArray(data, offset, length));
+        return nativeDecodeByteArray(data, offset, length);
     }
 
     /**
@@ -85,19 +88,40 @@ public final class GifDecoder {
                 throw new IllegalArgumentException("Cannot have non-direct ByteBuffer with no byte array");
             }
         }
-        return new GifDecoder(nativeDecodeByteBuffer(buffer, buffer.position(), buffer.remaining()));
+        return nativeDecodeByteBuffer(buffer, buffer.position(), buffer.remaining());
     }
 
     // /////////////////////////////////////////// Inner Method. //////////////////////////////////////////////////
 
     private long mNativePtr;
+    private final int mWidth, mHeight, mFrameCount, mLooperCount;
+    private final boolean mIsOpaque;
+    private final long mDuration;
 
-    private GifDecoder(long nativePtr) {
-        mNativePtr = nativePtr;
+    // invoke at native
+    private GifDecoder(long nativePtr, int width, int height, boolean isOpaque, int frameCount, int looperCount, long duration) {
+        this.mNativePtr = nativePtr;
+        this.mWidth = width;
+        this.mHeight = height;
+        this.mIsOpaque = isOpaque;
+        this.mFrameCount = frameCount;
+        this.mLooperCount = looperCount;
+        this.mDuration = duration;
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG, toString());
+        }
     }
 
-    public int getDefaultLoopCount() {
-        return 1;
+    @Override
+    public String toString() {
+        return "GifDecoder{" +
+                "Width=" + mWidth + ", " +
+                "Height=" + mHeight + ", " +
+                "IsOpaque=" + mIsOpaque + ", " +
+                "FrameCount=" + mFrameCount + ", " +
+                "LooperCount=" + mLooperCount + ", " +
+                "Duration=" + mDuration + "ms " +
+                '}';
     }
 
     /**
@@ -118,7 +142,7 @@ public final class GifDecoder {
      * @return gif width.
      */
     public int getWidth() {
-        return nativeGetWidth(mNativePtr);
+        return mWidth;
     }
 
     /**
@@ -127,7 +151,7 @@ public final class GifDecoder {
      * @return gif height.
      */
     public int getHeight() {
-        return nativeGetHeight(mNativePtr);
+        return mHeight;
     }
 
     /**
@@ -136,7 +160,32 @@ public final class GifDecoder {
      * @return gif frame count.
      */
     public int getFrameCount() {
-        return nativeGetFrameCount(mNativePtr);
+        return mFrameCount;
+    }
+
+    /**
+     * Get Looper count;
+     */
+    public int getLooperCount() {
+        return mLooperCount;
+    }
+
+    /**
+     * Get gif background color have opaque or not.
+     *
+     * @return true is have.
+     */
+    public boolean isOpaque() {
+        return mIsOpaque;
+    }
+
+    /**
+     * Get the duration associated with this gif.
+     *
+     * @return Unit is ms.
+     */
+    public long getDuration() {
+        return mDuration;
     }
 
     /**
@@ -159,27 +208,19 @@ public final class GifDecoder {
     }
 
     // /////////////////////////////////////////// Native Method. //////////////////////////////////////////////////
-
     static {
         System.loadLibrary("gifkit");
     }
 
-    private static native long nativeDecodeFile(String filePath);
+    private static native GifDecoder nativeDecodeFile(String filePath);
 
-    private static native long nativeDecodeStream(InputStream stream, byte[] tempStorage);
+    private static native GifDecoder nativeDecodeStream(InputStream stream, byte[] tempStorage);
 
-    private static native long nativeDecodeByteArray(byte[] data, int offset, int length);
+    private static native GifDecoder nativeDecodeByteArray(byte[] data, int offset, int length);
 
-    private static native long nativeDecodeByteBuffer(ByteBuffer buffer, int position, int remaining);
-
-    private static native int nativeGetWidth(long nativePtr);
-
-    private static native int nativeGetHeight(long nativePtr);
-
-    private static native int nativeGetFrameCount(long mNativePtr);
+    private static native GifDecoder nativeDecodeByteBuffer(ByteBuffer buffer, int position, int remaining);
 
     private static native long nativeGetFrame(long decoder, int frameNr, Bitmap output, int previousFrameNr);
 
     private static native void nativeDestroy(long nativePtr);
-
 }

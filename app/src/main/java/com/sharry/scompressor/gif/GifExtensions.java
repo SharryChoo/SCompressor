@@ -20,4 +20,5 @@ public class GifExtensions {
     public static RequestBuilder<FrameSequenceDrawable> asGif2(RequestBuilder<FrameSequenceDrawable> requestBuilder) {
         return requestBuilder.apply(DECODE_TYPE);
     }
+
 }

@@ -5,9 +5,16 @@ import androidx.annotation.NonNull;
 import com.bumptech.glide.load.resource.drawable.DrawableResource;
 import com.sharry.lib.gif.FrameSequenceDrawable;
 
-public class FrameSequenceDrawableResource extends DrawableResource<FrameSequenceDrawable> {
+/**
+ * 创建一个用于加载 GIF 的 Glide 的 Resource
+ *
+ * @author Sharry <a href="sharrychoochn@gmail.com">Contact me.</a>
+ * @version 1.0
+ * @since 2019-12-22
+ */
+public class GifDrawableResource extends DrawableResource<FrameSequenceDrawable> {
 
-    public FrameSequenceDrawableResource(FrameSequenceDrawable drawable) {
+    public GifDrawableResource(FrameSequenceDrawable drawable) {
         super(drawable);
     }
 

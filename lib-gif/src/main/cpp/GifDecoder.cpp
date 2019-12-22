@@ -96,7 +96,6 @@ void GifDecoder::init() {
         return;
     }
 
-    long durationMs = 0;
     int lastUnclearedFrame = -1;
     mPreservedFrames = new bool[mGif->ImageCount];
     mRestoringFrames = new int[mGif->ImageCount];
@@ -124,7 +123,7 @@ void GifDecoder::init() {
         DGifSavedExtensionToGCB(mGif, i, &gcb);
 
         // timing
-        durationMs += getDelayMs(gcb);
+        mDurationMs += getDelayMs(gcb);
 
         // preserve logic
         mPreservedFrames[i] = false;
@@ -138,14 +137,15 @@ void GifDecoder::init() {
         }
     }
 
-    // 打印 GIF 信息
-    ALOGE("GifDecoder created with size [%d, %d], frames is %d, duration is %ld",
-          mGif->SWidth, mGif->SHeight, mGif->ImageCount, durationMs);
-//    for (int i = 0; i < mGif->ImageCount; i++) {
-//        DGifSavedExtensionToGCB(mGif, i, &gcb);
-//        LOGE("Frame %d - must preserve %d, restore point %d, trans color %d",
-//             i, mPreservedFrames[i], mRestoringFrames[i], gcb.TransparentColor);
-//    }
+#if GIF_DEBUG
+    ALOGI("GifDecoder created with size [%d, %d], frames is %d, duration is %ld",
+          mGif->SWidth, mGif->SHeight, mGif->ImageCount, mDurationMs);
+    for (int i = 0; i < mGif->ImageCount; i++) {
+        DGifSavedExtensionToGCB(mGif, i, &gcb);
+        LOGE("Frame %d - must preserve %d, restore point %d, trans color %d",
+             i, mPreservedFrames[i], mRestoringFrames[i], gcb.TransparentColor);
+    }
+#endif
 
     // 解析 GIF 的背景色
     const ColorMapObject *cmap = mGif->SColorMap;
@@ -299,8 +299,9 @@ void GifDecoder::restorePreserveBuffer(Color8888 *outputPtr, int outputPixelStri
 
 void GifDecoder::savePreserveBuffer(Color8888 *outputPtr, int outputPixelStride,
                                     int frameNr) {
-    if (frameNr == mPreserveBufferFrame) return;
-
+    if (frameNr == mPreserveBufferFrame) {
+        return;
+    }
     mPreserveBufferFrame = frameNr;
     const int width = mGif->SWidth;
     const int height = mGif->SHeight;
@@ -318,39 +319,52 @@ void GifDecoder::savePreserveBuffer(Color8888 *outputPtr, int outputPixelStride,
 // JNILoader
 ////////////////////////////////////////////////////////////////////////////////
 
+static jobject createJavaGifDecoder(JNIEnv *env, jclass jclazz, GifDecoder *decoder) {
+    jmethodID jCtr = env->GetMethodID(jclazz, "<init>", "(JIIZIIJ)V");
+    return env->NewObject(
+            jclazz, jCtr,
+            reinterpret_cast<jlong>(decoder),
+            decoder->getWidth(),
+            decoder->getHeight(),
+            decoder->isOpaque(),
+            decoder->getFrameCount(),
+            decoder->getLooperCount(),
+            decoder->getDuration()
+    );
+}
+
 namespace gifdecoder {
 
-    jlong nativeDecodeFile(JNIEnv *env, jclass, jstring file_path) {
+    jobject nativeDecodeFile(JNIEnv *env, jclass jclazz, jstring file_path) {
         char *filePath = const_cast<char *>(env->GetStringUTFChars(file_path, NULL));
         GifDecoder *decoder = new GifDecoder(filePath);
         env->ReleaseStringUTFChars(file_path, filePath);
-        return reinterpret_cast<jlong>(decoder);
+        return createJavaGifDecoder(env, jclazz, decoder);
     }
 
-    jlong nativeDecodeStream(JNIEnv *env, jclass, jobject istream,
-                             jbyteArray byteArray) {
+    jobject nativeDecodeStream(JNIEnv *env, jclass jclazz, jobject istream,
+                               jbyteArray byteArray) {
         JavaInputStream stream(env, istream, byteArray);
-        ALOGE("decodeStream");
         GifDecoder *decoder = new GifDecoder(&stream);
-        return reinterpret_cast<jlong>(decoder);
+        return createJavaGifDecoder(env, jclazz, decoder);
     }
 
-    jlong nativeDecodeByteArray(JNIEnv *env, jclass,
-                                jbyteArray byteArray,
-                                jint offset, jint length) {
+    jobject nativeDecodeByteArray(JNIEnv *env, jclass jclazz,
+                                  jbyteArray byteArray,
+                                  jint offset, jint length) {
         jbyte *bytes = reinterpret_cast<jbyte *>(env->GetPrimitiveArrayCritical(byteArray, NULL));
         if (bytes == NULL) {
             ALOGE("couldn't read array bytes");
-            return -1;
+            return NULL;
         }
         MemoryStream stream(bytes + offset, length, NULL);
         GifDecoder *decoder = new GifDecoder(&stream);
         env->ReleasePrimitiveArrayCritical(byteArray, bytes, 0);
-        return reinterpret_cast<jlong>(decoder);
+        return createJavaGifDecoder(env, jclazz, decoder);
     }
 
-    jlong nativeDecodeByteBuffer(JNIEnv *env, jclass, jobject buf,
-                                 jint offset, jint limit) {
+    jobject nativeDecodeByteBuffer(JNIEnv *env, jclass jclazz, jobject buf,
+                                   jint offset, jint limit) {
         jobject globalBuf = env->NewGlobalRef(buf);
         JavaVM *vm;
         env->GetJavaVM(&vm);
@@ -359,7 +373,8 @@ namespace gifdecoder {
                 limit,
                 globalBuf);
         GifDecoder *decoder = new GifDecoder(&stream);
-        return reinterpret_cast<jlong>(decoder);
+        // create java GifDecoder.
+        return createJavaGifDecoder(env, jclazz, decoder);
     }
 
     jlong nativeGetFrame(JNIEnv *env, jobject, jlong decoder_handle,
@@ -377,21 +392,6 @@ namespace gifdecoder {
         return delayMs;
     }
 
-    jint nativeGetWidth(JNIEnv *, jobject, jlong native_ptr) {
-        GifDecoder *decoder = reinterpret_cast<GifDecoder *>(native_ptr);
-        return decoder->getWidth();
-    }
-
-    jint nativeGetHeight(JNIEnv *, jobject, jlong native_ptr) {
-        GifDecoder *decoder = reinterpret_cast<GifDecoder *>(native_ptr);
-        return decoder->getHeight();
-    }
-
-    jint nativeGetFrameCount(JNIEnv *, jobject, jlong native_ptr) {
-        GifDecoder *decoder = reinterpret_cast<GifDecoder *>(native_ptr);
-        return decoder->getFrameCount();
-    }
-
     void nativeDestroy(JNIEnv *, jobject, jlong native_ptr) {
         GifDecoder *decoder = reinterpret_cast<GifDecoder *>(native_ptr);
         delete (decoder);
@@ -401,16 +401,13 @@ namespace gifdecoder {
 
 static JNINativeMethod gGifDecoderMethods[] = {
         // create method.
-        {"nativeDecodeFile",       "(Ljava/lang/String;)J",           (void *) gifdecoder::nativeDecodeFile},
-        {"nativeDecodeStream",     "(Ljava/io/InputStream;[B)J",      (void *) gifdecoder::nativeDecodeStream},
-        {"nativeDecodeByteArray",  "([BII)J",                         (void *) gifdecoder::nativeDecodeByteArray},
-        {"nativeDecodeByteBuffer", "(Ljava/nio/ByteBuffer;II)J",      (void *) gifdecoder::nativeDecodeByteBuffer},
+        {"nativeDecodeFile",       "(Ljava/lang/String;)Lcom/sharry/lib/gif/GifDecoder;",      (void *) gifdecoder::nativeDecodeFile},
+        {"nativeDecodeStream",     "(Ljava/io/InputStream;[B)Lcom/sharry/lib/gif/GifDecoder;", (void *) gifdecoder::nativeDecodeStream},
+        {"nativeDecodeByteArray",  "([BII)Lcom/sharry/lib/gif/GifDecoder;",                    (void *) gifdecoder::nativeDecodeByteArray},
+        {"nativeDecodeByteBuffer", "(Ljava/nio/ByteBuffer;II)Lcom/sharry/lib/gif/GifDecoder;", (void *) gifdecoder::nativeDecodeByteBuffer},
         // other method.
-        {"nativeGetFrame",         "(JILandroid/graphics/Bitmap;I)J", (void *) gifdecoder::nativeGetFrame},
-        {"nativeGetWidth",         "(J)I",                            (void *) gifdecoder::nativeGetWidth},
-        {"nativeGetHeight",        "(J)I",                            (void *) gifdecoder::nativeGetHeight},
-        {"nativeGetFrameCount",    "(J)I",                            (void *) gifdecoder::nativeGetFrameCount},
-        {"nativeDestroy",          "(J)V",                            (void *) gifdecoder::nativeDestroy},
+        {"nativeGetFrame",         "(JILandroid/graphics/Bitmap;I)J",                          (void *) gifdecoder::nativeGetFrame},
+        {"nativeDestroy",          "(J)V",                                                     (void *) gifdecoder::nativeDestroy},
 };
 
 jint GifDecoder_OnLoad(JNIEnv *env) {
