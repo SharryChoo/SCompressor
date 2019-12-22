@@ -321,6 +321,7 @@ void GifDecoder::savePreserveBuffer(Color8888 *outputPtr, int outputPixelStride,
 
 static jobject createJavaGifDecoder(JNIEnv *env, jclass jclazz, GifDecoder *decoder) {
     jmethodID jCtr = env->GetMethodID(jclazz, "<init>", "(JIIZIIJ)V");
+    ALOGE("duraction is %ld", decoder->getDuration());
     return env->NewObject(
             jclazz, jCtr,
             reinterpret_cast<jlong>(decoder),
@@ -329,7 +330,7 @@ static jobject createJavaGifDecoder(JNIEnv *env, jclass jclazz, GifDecoder *deco
             decoder->isOpaque(),
             decoder->getFrameCount(),
             decoder->getLooperCount(),
-            decoder->getDuration()
+            static_cast<jlong>(decoder->getDuration())
     );
 }
 

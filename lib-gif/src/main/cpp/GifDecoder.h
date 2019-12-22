@@ -21,7 +21,7 @@ private:
     int *mRestoringFrames = NULL;
     int mPreserveBufferFrame;
     int mLoopCount = 1;
-    long mDurationMs;
+    long mDurationMs = 0l;
     Color8888 *mPreserveBuffer = NULL;
     Color8888 mBgColor = TRANSPARENT;
 

@@ -50,7 +50,7 @@ public class GifResourceDecoder implements ResourceDecoder<InputStream, FrameSeq
     public GifDrawableResource decode(@NonNull InputStream source, int width, int height, @NonNull Options options) throws IOException {
         GifDecoder decoder = GifDecoder.decodeStream(source);
         FrameSequenceDrawable drawable = new FrameSequenceDrawable(decoder, mProvider);
-        drawable.setLoopCount(Integer.MAX_VALUE);
+//        drawable.setLoopCount(Integer.MAX_VALUE);
         return new GifDrawableResource(drawable);
     }
 
