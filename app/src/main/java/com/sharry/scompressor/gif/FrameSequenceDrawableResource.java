@@ -5,10 +5,6 @@ import androidx.annotation.NonNull;
 import com.bumptech.glide.load.resource.drawable.DrawableResource;
 import com.sharry.lib.gif.FrameSequenceDrawable;
 
-/**
- * Created by Administrator on 2018\11\18 0018.
- */
-
 public class FrameSequenceDrawableResource extends DrawableResource<FrameSequenceDrawable> {
 
     public FrameSequenceDrawableResource(FrameSequenceDrawable drawable) {

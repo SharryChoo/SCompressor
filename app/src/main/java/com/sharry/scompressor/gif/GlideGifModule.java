@@ -12,16 +12,12 @@ import com.sharry.lib.gif.FrameSequenceDrawable;
 
 import java.io.InputStream;
 
-/**
- * Created by Administrator on 2018\11\18 0018.
- */
-
 @GlideModule
 public class GlideGifModule extends AppGlideModule {
 
     @Override
     public void registerComponents(@NonNull Context context, @NonNull Glide glide, @NonNull Registry registry) {
-        //第一个参数任意填写
+        // 第一个参数任意填写
         registry.prepend(Registry.BUCKET_GIF, InputStream.class, FrameSequenceDrawable.class, new FrameSequenceDecoder(glide.getBitmapPool()));
     }
 

@@ -14,12 +14,7 @@ import com.sharry.lib.gif.GifDecoder;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * Created by Administrator on 2018\11\18 0018.
- */
-
 public class FrameSequenceDecoder implements ResourceDecoder<InputStream, FrameSequenceDrawable> {
-
 
     private BitmapPool bitmapPool;
 

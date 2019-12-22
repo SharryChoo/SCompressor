@@ -6,10 +6,6 @@ import com.bumptech.glide.annotation.GlideType;
 import com.bumptech.glide.request.RequestOptions;
 import com.sharry.lib.gif.FrameSequenceDrawable;
 
-/**
- * Created by Administrator on 2018\11\19 0019.
- */
-
 @GlideExtension
 public class GifExtensions {
 
@@ -21,7 +17,7 @@ public class GifExtensions {
             .lock();
 
     @GlideType(FrameSequenceDrawable.class)
-    public static void asGif2(RequestBuilder<FrameSequenceDrawable> requestBuilder) {
-        requestBuilder.apply(DECODE_TYPE);
+    public static RequestBuilder<FrameSequenceDrawable> asGif2(RequestBuilder<FrameSequenceDrawable> requestBuilder) {
+        return requestBuilder.apply(DECODE_TYPE);
     }
 }

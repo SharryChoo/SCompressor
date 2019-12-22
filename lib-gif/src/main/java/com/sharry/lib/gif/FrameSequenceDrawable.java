@@ -33,6 +33,8 @@ import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 /**
  * Thanks for Google
  * <p>
@@ -379,7 +381,7 @@ public class FrameSequenceDrawable extends Drawable implements Animatable, Runna
     }
 
     @Override
-    public void draw(Canvas canvas) {
+    public void draw(@NonNull Canvas canvas) {
         synchronized (mLock) {
             checkDestroyedLocked();
             if (mState == STATE_WAITING_TO_SWAP) {
