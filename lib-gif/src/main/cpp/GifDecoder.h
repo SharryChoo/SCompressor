@@ -24,6 +24,7 @@ private:
     long mDurationMs = 0l;
     Color8888 *mPreserveBuffer = NULL;
     Color8888 mBgColor = TRANSPARENT;
+    bool mHasInit = false;
 
 public:
 
@@ -33,15 +34,21 @@ public:
 
     ~GifDecoder();
 
-    int getWidth() { return mGif->SWidth; }
+    bool hasInit() {
+        return mHasInit;
+    }
 
-    int getHeight() { return mGif->SHeight; }
+    int getWidth() {
+        return mHasInit ? mGif->SWidth : 0;
+    }
+
+    int getHeight() { return mHasInit ? mGif->SHeight : 0; }
 
     bool isOpaque() {
         return (mBgColor & COLOR_8888_ALPHA_MASK) == COLOR_8888_ALPHA_MASK;
     }
 
-    int getFrameCount() { return mGif->ImageCount; }
+    int getFrameCount() { return mHasInit ? mGif->ImageCount : 0; }
 
     int getLooperCount() {
         return mLoopCount;

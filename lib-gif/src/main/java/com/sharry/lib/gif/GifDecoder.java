@@ -3,6 +3,8 @@ package com.sharry.lib.gif;
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
@@ -23,8 +25,9 @@ public final class GifDecoder {
      * Get an instance of GifDecoder
      *
      * @param filePath a gif file path.
-     * @return an instance of GifDecoder
+     * @return an instance of GifDecoder, if decode failed will return null.
      */
+    @Nullable
     public static GifDecoder decodeFilePath(String filePath) {
         return nativeDecodeFile(filePath);
     }
@@ -33,8 +36,9 @@ public final class GifDecoder {
      * Get an instance of GifDecoder
      *
      * @param stream a gif stream
-     * @return an instance of GifDecoder
+     * @return an instance of GifDecoder, if decode failed will return null.
      */
+    @Nullable
     public static GifDecoder decodeStream(InputStream stream) {
         if (stream == null) {
             throw new IllegalArgumentException();
@@ -48,8 +52,9 @@ public final class GifDecoder {
      * Get an instance of GifDecoder
      *
      * @param data a gif byte array.
-     * @return an instance of GifDecoder
+     * @return an instance of GifDecoder, if decode failed will return null.
      */
+    @Nullable
     public static GifDecoder decodeByteArray(byte[] data) {
         return decodeByteArray(data, 0, data.length);
     }
@@ -58,8 +63,9 @@ public final class GifDecoder {
      * Get an instance of GifDecoder
      *
      * @param data a gif byte array.
-     * @return an instance of GifDecoder
+     * @return an instance of GifDecoder, if decode failed will return null.
      */
+    @Nullable
     public static GifDecoder decodeByteArray(byte[] data, int offset, int length) {
         if (data == null) {
             throw new IllegalArgumentException();
@@ -74,8 +80,9 @@ public final class GifDecoder {
      * Get an instance of GifDecoder
      *
      * @param buffer a gif native buffer.
-     * @return an instance of GifDecoder
+     * @return an instance of GifDecoder, if decode failed will return null.
      */
+    @Nullable
     public static GifDecoder decodeByteBuffer(ByteBuffer buffer) {
         if (buffer == null) {
             throw new IllegalArgumentException();

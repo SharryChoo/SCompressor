@@ -49,6 +49,9 @@ public class GifResourceDecoder implements ResourceDecoder<InputStream, FrameSeq
     @Override
     public GifDrawableResource decode(@NonNull InputStream source, int width, int height, @NonNull Options options) throws IOException {
         GifDecoder decoder = GifDecoder.decodeStream(source);
+        if (decoder == null) {
+            return null;
+        }
         FrameSequenceDrawable drawable = new FrameSequenceDrawable(decoder, mProvider);
 //        drawable.setLoopCount(Integer.MAX_VALUE);
         return new GifDrawableResource(drawable);

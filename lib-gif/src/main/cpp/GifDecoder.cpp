@@ -80,13 +80,13 @@ GifDecoder::GifDecoder(char *filePath) {
 
 GifDecoder::GifDecoder(Stream *stream) {
     mGif = DGifOpen(stream, streamReader, NULL);
-    ALOGE("GifDecoder stream constructor");
     init();
 }
 
 void GifDecoder::init() {
     if (!mGif) {
         ALOGW("Gif load failed");
+        DGifCloseFile(mGif, NULL);
         return;
     }
     if (DGifSlurp(mGif) != GIF_OK) {
@@ -159,6 +159,9 @@ void GifDecoder::init() {
             mBgColor = gifColorToColor8888(cmap->Colors[mGif->SBackGroundColor]);
         }
     }
+
+    // mark init success
+    mHasInit = true;
 }
 
 GifDecoder::~GifDecoder() {
@@ -172,6 +175,10 @@ GifDecoder::~GifDecoder() {
 
 long GifDecoder::drawFrame(int frameNr, Color8888 *outputPtr, int outputPixelStride,
                            int previousFrameNr) {
+    if (!mHasInit) {
+        return -1;
+    }
+
     GifFileType *gif = mGif;
 #if GIF_DEBUG
     ALOGD("      drawFrame on %p nr %d on addr %p, previous frame nr %d",
@@ -320,8 +327,12 @@ void GifDecoder::savePreserveBuffer(Color8888 *outputPtr, int outputPixelStride,
 ////////////////////////////////////////////////////////////////////////////////
 
 static jobject createJavaGifDecoder(JNIEnv *env, jclass jclazz, GifDecoder *decoder) {
+    if (!decoder || !decoder->hasInit()) {
+        ALOGE("Gif parsed failed. Please check input source and try again.");
+        return NULL;
+    }
+    // Create Java method.
     jmethodID jCtr = env->GetMethodID(jclazz, "<init>", "(JIIZIIJ)V");
-    ALOGE("duraction is %ld", decoder->getDuration());
     return env->NewObject(
             jclazz, jCtr,
             reinterpret_cast<jlong>(decoder),
